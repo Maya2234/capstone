@@ -2,7 +2,7 @@
 # Team Contract
 ---
 ### **Team Members**
-> Maya Tomarchio
+> Maya Tomarchio  return
 > Lead Developer
 > tomarcmf@mail.uc.edu
 ---
