@@ -1,3 +1,9 @@
+### **Faculty Advisor**
+Dr. Aurisano
+---
+### **Project Sought**
+> Looking to execute an exisiting project idea focusing in fintech / personal finance management
+---
 # Professional Biographies
 ---
 ## Maya Tomarchio
@@ -22,5 +28,3 @@ enabling 100+ engineers to ship code more efficiently
     - Actively contributed to agile ceremonies (daily stand-ups, sprint planning, reviews, retrospectives), providing updates
 and feedback to drive efficient sprint execution and team alignment
     - Researched and implemented updated NuGet packages and project code to update .net framework of team application
-### **Project Sought**
-> Looking to execute an exisiting project idea focusing in fintech / personal finance management
