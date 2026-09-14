@@ -3,11 +3,11 @@
 ---
 ### **Team Members**
 > Maya Tomarchio\
-> Lead Developer
+> Lead Developer\
 > tomarcmf@mail.uc.edu
 ---
-> Luke Brogee
-> Coordinator and Test Owner
+> Luke Brogee\
+> Coordinator and Test Owner\
 > brogeeld@mail.uc.edu
 ---
 ### **Meeting Schedule**
