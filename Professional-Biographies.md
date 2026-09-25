@@ -1,6 +1,3 @@
-### **Project Sought**
-> Looking to execute an exisiting project idea focusing in fintech / personal finance management
----
 # Professional Biographies
 ---
 ## Maya Tomarchio
