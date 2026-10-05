@@ -22,3 +22,30 @@ enabling 100+ engineers to ship code more efficiently
     - Actively contributed to agile ceremonies (daily stand-ups, sprint planning, reviews, retrospectives), providing updates
 and feedback to drive efficient sprint execution and team alignment
     - Researched and implemented updated NuGet packages and project code to update .net framework of team application
+ 
+## Luke Brogee
+
+| Field | Detail |
+| :--- | :--- |
+| **Name** | Luke Brogee |
+| **Major** | Computer Science |
+| **Phone** | (419) 604-2147 |
+| **Email** | [brogeeld@mail.uc.edu](mailto:brogeeld@mail.uc.edu) |
+
+---
+
+## Work Experience
+
+### Siemens
+**Software Engineer Co-op / Intern** | *January 2025 – August 2026*
+
+* Contributed to the Siemens NX CAD software suite by implementing new features and resolving high-priority customer issues.
+* Engineered internal CLI tools and automated executables using **Go (Golang)**, streamlining daily workflows for development and DevOps teams.
+* Collaborated closely with the Teamcenter Integration team to debug cross-functional dependencies and enhance customer-facing deployment stability.
+
+### Fishbowl at the Banks
+**Manager & Head of Security** | *May 2023 – Present*
+
+* Managed and audited over $35,000 in weekly inventory, maintaining optimal stock levels and minimizing waste.
+* Recruited, trained, and mentored front-of-house, kitchen, and security personnel, standardizing safety protocols and guest experience standards.
+* Partnered with executive management to optimize bar operations, high-volume crowd management, and revenue strategies.
