@@ -1,6 +1,6 @@
 # CardStack — Peer Design Review Notes (D2)
 
-## 1. Items received
+## Issues Raised
 
 | ID | Criterion | Issue (raised by) | Action | Owner | Priority | Due |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -30,13 +30,7 @@ the consent copy rather than the mechanism.
   + React Native mobile), but D2's rationale still argues for React Native *for web* and for Azure
   hosting in both places. The written document has not been re-synthesised yet.
 
-## 2. Notes from reviewing other teams
-
-Not captured here. The review session produced no written record of the comments CardStack gave on
-the other teams' designs, so this file does not claim any. Add them as `RV-1`, `RV-2`, … if the
-notes turn up.
-
-## 3. Carried forward from D2's own open questions (not peer feedback)
+## Carried forward from D2's own open questions (not peer feedback)
 
 Listed so the two known gaps are not lost between reviews. Neither was raised by a reviewer.
 
@@ -45,7 +39,7 @@ Listed so the two known gaps are not lost between reviews. Neither was raised by
 | OQ-1 | Clarity | D2 leaves card-selection tie-breaking and the comparison between miles and cash back undecided, and mentions them only as edge cases. | State the scoring rule and the tie-break order in Section 2 and in EC-02: `effective_value = amount × rate × point_value`, ties go to the preferred card, then lowest utilization, then the oldest card. | Maya | must-fix | 11/10 (applied in draft) |
 | OQ-2 | Risk | The virtual debit card (phase 2) is in concept testing with no requirement behind it. | Keep it out of D2, and say plainly in the rationale that no interface, data model or requirement is committed for it. | Luke | out of scope for now | — |
 
-## 4. Summary
+## Summary
 
 **Which criterion drew the most feedback.** Clarity — two of the three items (PR-2, PR-3), with
 feasibility taking the third (PR-1) and nothing raised under completeness or risk. That split is
