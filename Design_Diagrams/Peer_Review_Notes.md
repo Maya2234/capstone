@@ -1,7 +1,5 @@
 # CardStack — Peer Design Review Notes (D2)
 
-## Issues Raised
-
 | ID | Criterion | Issue (raised by) | Action | Owner | Priority | Due |
 | --- | --- | --- | --- | --- | --- | --- |
 | PR-1 | Feasibility | Plaid connects bank and credit accounts for *reading* data, but it may not hand back a card token that can actually be charged. (Claire Hooper) | Document the token path end to end: Plaid Link → `/processor/token/create` with Stripe as the processor → `user_card.processor_token` → the charge in I4/I5. Add the same paragraph to the Design Rationale so a reader can see the card becomes chargeable without CardStack ever seeing a PAN. | Maya | must-fix | 11/10 |
