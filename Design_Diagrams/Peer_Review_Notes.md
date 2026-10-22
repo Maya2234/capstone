@@ -17,7 +17,7 @@
 
 ## Summary
 
-**Which criterion drew the most feedback.** Clarity — two of the three items (PR-2, PR-3), with
+Clarity aspects had the most issues raised: two of the three items (PR-2, PR-3), with
 feasibility taking the third (PR-1) and nothing raised under completeness or risk. That split is
 useful rather than disappointing: neither clarity item was about the design being wrong, they were
 about a decision the system silently makes (charging the next card) and a document that had drifted
