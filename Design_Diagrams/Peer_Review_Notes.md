@@ -12,7 +12,7 @@
 
 | ID | Criterion | Issue | Action | Owner | Priority | Due |
 | --- | --- | --- | --- | --- | --- | --- |
-| OQ-1 | Clarity | D2 leaves card-selection tie-breaking and the comparison between miles and cash back undecided, and mentions them only as edge cases. | State the scoring rule and the tie-break order in Section 2 and in EC-02: `effective_value = amount × rate × point_value`, ties go to the preferred card, then lowest utilization, then the oldest card. | Maya | High | 11/10 (applied in draft) |
+| OQ-1 | Clarity | D2 leaves card-selection tie-breaking and the comparison between miles and cash back undecided, and mentions them only as edge cases. | State the scoring rule and the tie-break order in Section 2 and in EC-02: `effective_value = amount × rate × point_value`, ties go to the preferred card, then lowest utilization, then the oldest card. | Maya | High | Already Documented|
 | OQ-2 | Risk | The virtual debit card (phase 2) is in concept testing with no requirement behind it. | Keep it out of D2, and say plainly in the rationale that no interface, data model or requirement is committed for it. | NA | NA | — |
 
 ## Summary
