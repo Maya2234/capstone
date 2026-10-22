@@ -1,19 +1,5 @@
 # CardStack — Peer Design Review Notes (D2)
 
-Feedback from the D2 detailed-design review, converted into action items. The three issues
-recorded here are the ones captured during the review and already summarised in D2 Section 6;
-this file expands them with the rubric criterion, an owner, a priority and a due date, and adds
-what the draft currently does about each one.
-
-Criterion is one of **completeness**, **feasibility**, **clarity** or **risk**.
-Priority is one of **must-fix**, **worth considering** or **out of scope for now**.
-
-Owners follow the [team contract](../Team_Contract.md): Maya Tomarchio (lead developer),
-Luke Brogee (coordinator and test owner).
-
-All three items in Section 1 came from the same reviewer, Claire Hooper; the written record does not
-say which team she reviewed on behalf of, so no team number is claimed here.
-
 ## 1. Items received
 
 | ID | Criterion | Issue (raised by) | Action | Owner | Priority | Due |
@@ -68,9 +54,6 @@ about a decision the system silently makes (charging the next card) and a docume
 out of step with itself. The feasibility item is the one with real weight, because it questions
 whether a Plaid token can be charged at all; the answer has to be written into D2, not just
 implemented.
-
-**Top two issues raised while reviewing other teams.** Not recorded in this session — see Section 2.
-
 ### Follow-up
 
 - Update D2 Section 6 to match this file once PR-1 and PR-3 are applied, so the document and the
