@@ -1,36 +1,14 @@
 # CardStack — Peer Design Review Notes (D2)
 
+## Peer Feedback
+
 | ID | Criterion | Issue (raised by) | Action | Owner | Priority | Due |
 | --- | --- | --- | --- | --- | --- | --- |
 | PR-1 | Feasibility | Plaid connects bank and credit accounts for *reading* data, but it may not hand back a card token that can actually be charged. (Claire Hooper) | Document the token path end to end: Plaid Link → `/processor/token/create` with Stripe as the processor → `user_card.processor_token` → the charge in I4/I5. Add the same paragraph to the Design Rationale so a reader can see the card becomes chargeable without CardStack ever seeing a PAN. | Maya | must-fix | 11/10 |
 | PR-2 | Clarity | The design says a declined card is followed automatically by a different card, but never states what the user is asked or told when that happens. (Claire Hooper) | Make the fallback an explicit user choice: the popup names the card being tried, shows the declined result, and offers "try <next card>" before a second charge. Update EC-03 and the PROCESSING → CARD_SELECTED edge in Figure 2 to match. | Maya | worth considering | End of semester |
 | PR-3 | Clarity | Parts of the document do not agree with each other — for example the technology stack and the design rationale describe different hosting and frontend choices. (Claire Hooper) | Re-read D2 top to bottom against D1 and synthesise: one React Native story, one Azure story, interface revisions applied everywhere they are referenced. | Luke | must-fix | 10/31 |
 
-Legend for the priority column: PR-1 was recorded as *Medium* in D2 §6 and is raised to must-fix
-because requirements R-1 and R-2 cannot be credited if the card cannot be charged. PR-2 was
-recorded as *Low* and stays at worth-considering: the behaviour exists, so what is missing is
-the consent copy rather than the mechanism.
-
-### What the current draft does about each one
-
-- **PR-1 — open in the design, mocked in the draft.** Cards are stored as processor tokens plus
-  last4 only ([cards.go](../server/internal/store/cards.go), `user_card.processor_token`), and the
-  charge path sends that token ([payments.go](../server/internal/payments/payments.go)). But the
-  Plaid abstraction in [plaid.go](../server/internal/plaid/plaid.go) has only link-token and
-  public-token exchange calls — there is no processor-token step — so the demo falls back to
-  `seed_tok_*` tokens. The missing paragraph is still missing from D2 itself.
-- **PR-2 — mechanism done, consent copy not.** A decline walks the ranked list instead of
-  failing (`TestDeclineFallsThroughToNextCard`, [api_test.go](../server/internal/api/api_test.go)),
-  and the checkout popup lists every alternative with what it would have earned, plus a
-  "use a different card" control ([Checkout.tsx](../apps/web/src/components/Checkout.tsx)). The
-  automatic retry still happens without asking, so the action above is only partly applied.
-- **PR-3 — partly done.** The draft implements one stack consistently (Go server + React/Vite web
-  + React Native mobile), but D2's rationale still argues for React Native *for web* and for Azure
-  hosting in both places. The written document has not been re-synthesised yet.
-
-## Carried forward from D2's own open questions (not peer feedback)
-
-Listed so the two known gaps are not lost between reviews. Neither was raised by a reviewer.
+## Self Critique
 
 | ID | Criterion | Issue | Action | Owner | Priority | Due |
 | --- | --- | --- | --- | --- | --- | --- |
