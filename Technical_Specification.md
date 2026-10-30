@@ -10,7 +10,7 @@
 | Version | Date | Change | Author |
 | --- | --- | --- | --- |
 | 0.1 | 10/28/2026 | Initial draft, traced to Requirements Document v0.1. Consolidates D0, D1, D2, and the D3 plan. | Maya Tomarchio |
-| 1.0 | [date] | Revisions from advisor review (Section 7); retrace to Requirements Document v1.0. | [author] |
+| 1.0 | 10/29/2026 | Revisions from advisor review (Section 7); retrace to Requirements Document v1.0. | Luke Brogee |
 
 
 **Design changes since the Week 7 (D1) review**
@@ -208,8 +208,8 @@ One row per REQ, NFR, and CON ID in Requirements Document v0.1. Test case IDs ar
 
 | Item | Record |
 | --- | --- |
-| Date of review | [MM/DD/2026] (send both drafts to Dr. Aurisano at least three days before the deadline) |
+| Date of review | 10/29/2026 (send both drafts to Dr. Aurisano at least three days before the deadline) |
 | Attendees | Dr. Aurisano, Luke Brogee, Maya Tomarchio |
-| Discussed | [Fill in after the meeting: for example, the Must set, NFR thresholds, the traceability matrix, open questions Q-01 to Q-05.] |
-| Changes produced | [List each change and log it as version 1.0 in both change logs.] |
+| Discussed | With our traceability matrix and features planned moving forward we discussed the plan with Dr. Aurisano. She gave insight mainly on creating a feasible product rather than a finished product. We discussed:  <ul><li>How will we know the category when a user makes a purchase to reroute to a specific card<ul><li>Might need to make mockup data for presentation</li></ul></li></ul><ul><li>What to show on mobile<ul><li>Account Settings</li></ul><ul><li>Linked Cards</li></ul><ul><li>Transactions</li></ul><ul><li>Data like top merchants or top categories</li></ul></li></ul><ul><li>Web App<ul><li>Sign Up</li></ul><ul><li>More account settings</li></ul><ul><li>More analytical data</li></ul></li></ul> |
+| Changes produced | As of now no changes needed. |
 
