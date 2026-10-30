@@ -9,7 +9,7 @@
 | Version | Date | Change | Author |
 | --- | --- | --- | --- |
 | 0.1 | 10/28/2026 | Initial draft consolidated from User_Stories.md (Week 4), Constraints_Essay.md (Week 3), D0, D1, D2, and the D3 plan. D2 requirements R-1 to R-6 renumbered as REQ/NFR IDs (mapping in Section 5). | Maya Tomarchio |
-| 1.0 | 10/28/2026 | Revisions from advisor review  | Luke Brogee |
+| 1.0 | 10/29/2026 | Revisions from advisor review  | Luke Brogee |
 
 
 ## 2. Purpose and Scope
