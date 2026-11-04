@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CardStack Checkout</title>
+<link rel="stylesheet" href="/static/ui.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="8" width="16" height="11" rx="2.5" fill="#34D399"/><rect x="4" y="5.5" width="16" height="11" rx="2.5" fill="#38BDF8"/><rect x="6" y="3" width="16" height="11" rx="2.5" fill="#A78BFA"/></svg>
+    CardStack
+  </div>
+
+  <div class="card" id="summary">
+    <div class="muted small" id="merchant">Loading…</div>
+    <div class="amount" id="amount"></div>
+    <div class="small muted" id="order"></div>
+  </div>
+
+  <div id="view"><div class="spinner"></div></div>
+</div>
+
+<script>
+const txId = location.pathname.split('/').pop();
+const api = (p) => '/server/v1' + p;
+const view = document.getElementById('view');
+let info = null, cfg = null, ranked = [], selectedId = null;
+
+const money = (c) => '$' + (c / 100).toFixed(2);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const token = () => localStorage.getItem('cardstack_session');
+
+async function call(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  if (token()) headers.Authorization = 'Bearer ' + token();
+  const r = await fetch(api(path), { ...opts, headers });
+  let body = null;
+  try { body = await r.json(); } catch (_) {}
+  return { status: r.status, body };
+}
+
+async function load() {
+  const [c, t] = await Promise.all([call('/config'), call('/checkout/' + txId)]);
+  cfg = c.body; info = t.body;
+  if (t.status !== 200) return fatal('This checkout link is not valid.');
+  document.getElementById('merchant').textContent = 'Pay ' + info.merchantName;
+  document.getElementById('amount').textContent = money(info.amountCents);
+  document.getElementById('order').textContent = 'Order ' + info.orderId + ' · ' + info.category;
+  if (['SUCCEEDED', 'FAILED', 'ABANDONED'].includes(info.state)) return done(info);
+  if (info.state === 'UNKNOWN' || info.state === 'PROCESSING') return waitForResult();
+  if (!token()) return signIn();
+  selectCard();
+}
+
+function signIn(message) {
+  // REQ-02: the cart is kept; signing in again resumes the same checkout.
+  view.innerHTML = `
+    <div class="card">
+      <h1>Sign in to pay</h1>
+      ${message ? `<p class="warn small">${esc(message)}</p>` : '<p class="muted small">Use the Google account you linked your cards with.</p>'}
+      <div id="gsi"></div>
+      ${cfg.devMode ? `
+        <form id="dev">
+          <p class="small muted" style="margin:14px 0 8px">Development sign-in (no Google account needed)</p>
+          <input type="email" id="email" placeholder="you@example.com" required value="${esc(localStorage.getItem('cardstack_email') || '')}">
+          <button class="primary" type="submit">Continue</button>
+        </form>` : ''}
+    </div>`;
+  if (cfg.googleClientId) {
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.onload = () => {
+      google.accounts.id.initialize({ client_id: cfg.googleClientId, callback: (r) => exchange(r.credential) });
+      google.accounts.id.renderButton(document.getElementById('gsi'), { theme: 'outline', size: 'large', width: 360 });
+    };
+    document.head.appendChild(s);
+  }
+  const f = document.getElementById('dev');
+  if (f) f.onsubmit = (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    localStorage.setItem('cardstack_email', email);
+    exchange('dev:' + email);
+  };
+}
+
+async function exchange(idToken) {
+  const r = await call('/auth/google', { method: 'POST', body: JSON.stringify({ idToken }) });
+  if (r.status !== 200) return signIn(r.body?.message || 'Sign-in failed');
+  localStorage.setItem('cardstack_session', r.body.sessionToken);
+  selectCard();
+}
+
+function authFailed(r) {
+  if (r.status === 401) { localStorage.removeItem('cardstack_session'); signIn('Your session expired. Sign in again.'); return true; }
+  return false;
+}
+
+async function selectCard() {
+  view.innerHTML = '<div class="spinner"></div>';
+  const r = await call('/select-card', { method: 'POST', body: JSON.stringify({ transactionId: txId }) });
+  if (authFailed(r)) return;
+  if (r.status === 404 && r.body?.error === 'E-SEL-NO-CARD') return noCard(r.body.excluded || []);
+  if (r.status === 409) return done(r.body.result);
+  if (r.status !== 200) return fatal(r.body?.message || 'Could not load your cards.');
+  ranked = r.body.ranked;
+  selectedId = ranked[0].cardId;
+  confirmView();
+}
+
+function confirmView(note) {
+  // REQ-03: show amount, merchant and the selected card before charging.
+  const best = ranked[0];
+  view.innerHTML = `
+    <div class="card">
+      ${note ? `<div class="banner warn">${esc(note)}</div>` : ''}
+      <div class="row"><strong>Pay with</strong><span class="chip">Best for ${esc(info.category)}</span></div>
+      ${ranked.map((c, i) => `
+        <label class="option ${c.cardId === selectedId ? 'selected' : ''}">
+          <input type="radio" name="card" value="${esc(c.cardId)}" ${c.cardId === selectedId ? 'checked' : ''}>
+          <div style="flex:1">
+            <div class="row"><strong>${esc(c.productName)}</strong><span class="good small">+${money(c.expectedValueCents)}</span></div>
+            <div class="small muted">${esc(c.network)} •••• ${esc(c.last4)} · ${esc(c.reason)}</div>
+            ${i === 0 ? '<div class="small good">Most rewards for this purchase</div>' : ''}
+          </div>
+        </label>`).join('')}
+    </div>
+    <button class="primary" id="pay">Purchase ${money(info.amountCents)}</button>
+    <button class="ghost" id="cancel">Cancel and return to ${esc(info.merchantName)}</button>`;
+  view.querySelectorAll('input[name=card]').forEach((el) => el.onchange = () => { selectedId = el.value; confirmView(note); });
+  document.getElementById('pay').onclick = () => pay(false);
+  document.getElementById('cancel').onclick = cancel;
+}
+
+async function pay(consent) {
+  const btn = document.getElementById('pay') || document.getElementById('fallback');
+  if (btn) { btn.disabled = true; btn.textContent = 'Processing…'; }
+  const r = await call('/process-card-payment', {
+    method: 'POST', headers: { 'Idempotency-Key': txId },
+    body: JSON.stringify({ transactionId: txId, cardId: selectedId, consentToFallback: consent }),
+  });
+  if (authFailed(r)) return;
+  if (r.status === 200) return done({ ...r.body, status: 'approved', orderId: info.orderId });
+  if (r.status === 202) return waitForResult();
+  if (r.status === 409) return done(r.body.result);
+  if (r.status === 502 && r.body?.nextCard) return fallback(r.body.declinedCard, r.body.nextCard);
+  if (r.status === 502) return done({ status: 'declined', state: 'FAILED', reason: 'CardDeclined', orderId: info.orderId, transactionId: txId });
+  if (btn) btn.disabled = false;
+  fatal(r.body?.message || 'Payment failed.');
+}
+
+function fallback(declined, next) {
+  // REQ-08: say which card was declined and ask before charging the next one.
+  ranked = ranked.filter((c) => c.cardId !== declined.cardId);
+  selectedId = next.cardId;
+  view.innerHTML = `
+    <div class="card center">
+      <div class="big-icon">⚠️</div>
+      <h1>Card declined</h1>
+      <p class="muted">Your ${esc(declined.network)} •••• ${esc(declined.last4)} was declined.</p>
+      <p>Charge <strong>${esc(next.productName)} •••• ${esc(next.last4)}</strong> instead?<br>
+      <span class="small good">Earns ${money(next.expectedValueCents)} in rewards</span></p>
+    </div>
+    <button class="primary" id="fallback">Yes, charge •••• ${esc(next.last4)}</button>
+    <button class="ghost" id="cancel">No, cancel this payment</button>`;
+  document.getElementById('fallback').onclick = () => pay(true);
+  document.getElementById('cancel').onclick = cancel;
+}
+
+async function cancel() {
+  const r = await call('/checkout/' + txId + '/cancel', { method: 'POST', body: '{}' });
+  if (authFailed(r)) return;
+  done(r.body?.result || r.body);
+}
+
+async function waitForResult() {
+  // REQ-10: the processor has not answered; the reconciliation job will resolve it.
+  view.innerHTML = `<div class="card center"><div class="spinner"></div><h1>Confirming your payment</h1>
+    <p class="muted small">The card processor is taking longer than usual. You can keep this window open; it updates automatically.</p></div>`;
+  for (;;) {
+    await new Promise((r) => setTimeout(r, 2000));
+    const t = await call('/checkout/' + txId);
+    if (t.body && ['SUCCEEDED', 'FAILED', 'ABANDONED'].includes(t.body.state)) return done(t.body);
+  }
+}
+
+function noCard(excluded) {
+  // REQ-14 / EC-09: no eligible card, offer Add a card.
+  view.innerHTML = `
+    <div class="card center">
+      <div class="big-icon">💳</div>
+      <h1>No card available</h1>
+      <p class="muted">${excluded.length ? 'None of your linked cards can cover this purchase right now.' : 'You have not linked a card yet.'}</p>
+      ${cfg.appUrl ? `<a class="primary" href="${esc(cfg.appUrl)}" target="_blank" rel="noopener">Add a card</a>` : ''}
+      <button class="ghost" id="retry">I added a card, try again</button>
+    </div>`;
+  document.getElementById('retry').onclick = selectCard;
+}
+
+function done(result) {
+  // REQ-07: return the result to the merchant page and route the consumer back.
+  const ok = result.state === 'SUCCEEDED' || result.status === 'approved';
+  const payload = {
+    orderId: result.orderId || info.orderId, transactionId: result.transactionId || txId,
+    status: ok ? 'approved' : 'declined', state: result.state, reason: ok ? null : (result.reason || null),
+    cardLast4: result.cardLast4 || null,
+  };
+  view.innerHTML = `
+    <div class="card center">
+      <div class="big-icon">${ok ? '✅' : '✖️'}</div>
+      <h1>${ok ? 'Payment approved' : 'Payment not completed'}</h1>
+      <p class="muted">${ok ? `Charged to •••• ${esc(payload.cardLast4)}` : esc(payload.reason || 'No charge was made.')}</p>
+      ${ok && (result.pointsEarnedCents ?? info.pointsEarnedCents) ? `<p class="good">You earned about ${money(result.pointsEarnedCents ?? info.pointsEarnedCents)} in rewards</p>` : ''}
+      <p class="small muted">Returning to ${esc(info.merchantName)}…</p>
+    </div>`;
+  const returnUrl = info.returnUrl;
+  if (window.opener && returnUrl) {
+    window.opener.postMessage({ type: 'cardstack:result', result: payload }, new URL(returnUrl).origin);
+    setTimeout(() => window.close(), 1800);
+  } else if (returnUrl) {
+    const u = new URL(returnUrl);
+    u.searchParams.set('cardstack_status', payload.status);
+    u.searchParams.set('transactionId', payload.transactionId);
+    setTimeout(() => (location.href = u.toString()), 1800);
+  }
+}
+
+function fatal(msg) {
+  view.innerHTML = `<div class="card center"><div class="big-icon">⚠️</div><p>${esc(msg)}</p></div>`;
+}
+
+load();
+</script>
+</body>
+</html>

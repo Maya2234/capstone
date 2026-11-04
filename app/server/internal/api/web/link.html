@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Link an account (sandbox)</title>
+<link rel="stylesheet" href="/static/ui.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">🏦 Link an account</div>
+  <div class="banner">Sandbox stand-in for Plaid Link. No real bank sign-in happens here, and no card numbers are entered.</div>
+  <div id="view"><div class="spinner"></div></div>
+</div>
+<script>
+const params = new URLSearchParams(location.search);
+const linkToken = params.get('token');
+const view = document.getElementById('view');
+const money = (c) => '$' + (c / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let institutions = [];
+
+async function start() {
+  if (params.get('done')) return finished();
+  if (!linkToken) return view.innerHTML = '<div class="card">Missing link token. Start from the CardStack app.</div>';
+  const r = await fetch('/server/v1/plaid/institutions');
+  institutions = (await r.json()).institutions;
+  view.innerHTML = '<div class="card"><h1>Select your bank</h1>' + institutions.map((i) => `
+    <button class="ghost" data-id="${esc(i.id)}" style="text-align:left;padding:0 14px">${esc(i.name)}
+      <span class="small muted"> · ${i.accounts.length} account${i.accounts.length === 1 ? '' : 's'}</span></button>`).join('') + '</div>';
+  view.querySelectorAll('button[data-id]').forEach((b) => b.onclick = () => pick(b.dataset.id));
+}
+
+function pick(id) {
+  const inst = institutions.find((i) => i.id === id);
+  view.innerHTML = `<div class="card"><h1>${esc(inst.name)}</h1>
+    <p class="muted small">Choose which accounts CardStack can see. Credit cards can be charged at checkout; bank accounts only appear in your dashboard.</p>
+    ${inst.accounts.map((a) => `
+      <label class="option"><input type="checkbox" value="${esc(a.accountId)}" checked>
+        <div style="flex:1"><div class="row"><strong>${esc(a.name)}</strong><span class="small">${money(a.balanceCents)}</span></div>
+        <div class="small muted">${a.type === 'credit' ? esc(a.network) + ' credit card' : esc(a.subtype)} •••• ${esc(a.mask)}</div></div>
+      </label>`).join('')}
+    </div>
+    <button class="primary" id="go">Continue</button>
+    <button class="ghost" id="back">Choose a different bank</button>`;
+  document.getElementById('back').onclick = start;
+  document.getElementById('go').onclick = async () => {
+    const ids = [...view.querySelectorAll('input:checked')].map((i) => i.value);
+    if (!ids.length) return;
+    document.getElementById('go').disabled = true;
+    const r = await fetch('/server/v1/plaid/sandbox-complete', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ linkToken, institutionId: id, accountIds: ids }),
+    });
+    const body = await r.json();
+    if (!r.ok) {
+      view.innerHTML = `<div class="card"><p class="bad">${esc(body.message || 'Linking failed')}</p></div><button class="ghost" id="back">Try again</button>`;
+      document.getElementById('back').onclick = start;
+      return;
+    }
+    finished(body.cardsAdded);
+  };
+}
+
+async function finished(cards) {
+  view.innerHTML = `<div class="card center"><div class="big-icon">✅</div><h1>Account linked</h1>
+    <p class="muted">${cards != null ? cards + ' card' + (cards === 1 ? '' : 's') + ' added.' : ''}</p></div>`;
+  if (window.opener) {
+    window.opener.postMessage({ type: 'cardstack:linked', cardsAdded: cards }, '*');
+    setTimeout(() => window.close(), 1500);
+    return;
+  }
+  // Opened full-page (popup blocked or on a phone): offer a way back to the app.
+  const cfg = await (await fetch('/server/v1/config')).json();
+  if (cfg.appUrl) view.insertAdjacentHTML('beforeend', `<a class="primary" href="${esc(cfg.appUrl)}/cards">Back to CardStack</a>`);
+}
+
+start();
+</script>
+</body>
+</html>

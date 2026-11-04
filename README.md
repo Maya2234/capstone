@@ -13,3 +13,4 @@
 | [Tasklist.md](/Tasklist.md) | Design D3 task list with modules and owners |
 | [Design_Diagrams/](/Design_Diagrams) | D0–D3 design documents, diagrams, and peer review notes |
 | [planning/](/planning) | Effort matrix and planning checklists |
+| [app/](/app) | Working prototype: Go API, React Native consumer app, demo merchant store, and card rewards dataset |

@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "cardstack-api",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": ["-NoProfile", "-Command", "$env:Path = 'C:\\Program Files\\Go\\bin;' + $env:Path; Set-Location app/server; go run ./cmd/cardstack"],
+      "port": 8080
+    },
+    {
+      "name": "merchant-demo",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": ["-NoProfile", "-Command", "$env:Path = 'C:\\Program Files\\Go\\bin;' + $env:Path; Set-Location app/merchant-demo; go run ."],
+      "port": 4000
+    },
+    {
+      "name": "consumer-app",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": ["-NoProfile", "-Command", "Set-Location app/consumer; npx expo start --web --port 8081"],
+      "port": 8081
+    }
+  ]
+}

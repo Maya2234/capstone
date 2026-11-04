@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Threadline Apparel</title>
+<style>
+  :root { --bg:#faf8f5; --surface:#fff; --text:#1c1917; --muted:#78716c; --line:#e7e5e4; --good:#047857; --bad:#b91c1c; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#1c1917; --surface:#292524; --text:#fafaf9; --muted:#a8a29e; --line:#44403c; --good:#34d399; --bad:#f87171; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  header { padding:18px 16px; border-bottom:1px solid var(--line); }
+  header .in { max-width:1040px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; }
+  .logo { font:700 20px Georgia,serif; letter-spacing:.5px; }
+  .demo { font-size:12px; color:var(--muted); }
+  main { max-width:1040px; margin:0 auto; padding:24px 16px; display:grid; grid-template-columns:1fr 340px; gap:28px; }
+  @media (max-width:820px) { main { grid-template-columns:1fr; } }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:16px; }
+  .p { background:var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden; display:flex; flex-direction:column; }
+  .swatch { height:150px; display:grid; place-items:center; font:700 44px Georgia,serif; color:#fff; }
+  .p .b { padding:14px; display:flex; flex-direction:column; gap:6px; flex:1; }
+  .p .d { color:var(--muted); font-size:13px; flex:1; }
+  .p button { min-height:40px; border:1px solid var(--text); background:transparent; color:var(--text); border-radius:8px; font:600 14px system-ui; cursor:pointer; }
+  aside { background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px; align-self:start; position:sticky; top:16px; }
+  .line { display:flex; justify-content:space-between; gap:8px; padding:6px 0; }
+  .line button { border:0; background:none; color:var(--muted); cursor:pointer; font-size:13px; }
+  .total { border-top:1px solid var(--line); margin-top:8px; padding-top:10px; font-weight:700; font-size:18px; }
+  #status { margin-top:14px; font-size:14px; min-height:20px; }
+  .ok { color:var(--good); } .err { color:var(--bad); }
+  .muted { color:var(--muted); }
+  h2 { margin:0 0 12px; font-size:18px; }
+</style>
+</head>
+<body>
+<header><div class="in"><span class="logo">THREADLINE</span><span class="demo">Demo merchant · accepts CardStack</span></div></header>
+<main>
+  <section>
+    <h2>New arrivals</h2>
+    <div class="grid">
+      {{range .Products}}
+      <div class="p">
+        <div class="swatch" style="background:{{.Color}}">{{slice .Name 0 1}}</div>
+        <div class="b">
+          <strong>{{.Name}}</strong>
+          <span class="d">{{.Description}}</span>
+          <span>${{printf "%.2f" (divide .PriceCents)}}</span>
+          <button data-id="{{.ID}}" data-name="{{.Name}}" data-price="{{.PriceCents}}">Add to cart</button>
+        </div>
+      </div>
+      {{end}}
+    </div>
+  </section>
+  <aside>
+    <h2>Your cart</h2>
+    <div id="lines" class="muted">Your cart is empty.</div>
+    <div class="line total"><span>Total</span><span id="total">$0.00</span></div>
+    <div id="cardstack-button" style="margin-top:14px"></div>
+    <div id="status"></div>
+  </aside>
+</main>
+
+<script src="{{.CardStackURL}}/static/checkout.js"></script>
+<script>
+const cart = {};
+const prices = {}, names = {};
+const money = (c) => '$' + (c / 100).toFixed(2);
+document.querySelectorAll('.p button').forEach((b) => {
+  prices[b.dataset.id] = +b.dataset.price; names[b.dataset.id] = b.dataset.name;
+  b.onclick = () => { cart[b.dataset.id] = (cart[b.dataset.id] || 0) + 1; render(); };
+});
+function render() {
+  const ids = Object.keys(cart).filter((k) => cart[k] > 0);
+  const lines = document.getElementById('lines');
+  lines.className = ids.length ? '' : 'muted';
+  lines.innerHTML = ids.length ? ids.map((id) => `<div class="line"><span>${cart[id]}× ${names[id]}</span>
+    <span>${money(prices[id] * cart[id])} <button data-rm="${id}" aria-label="Remove">✕</button></span></div>`).join('') : 'Your cart is empty.';
+  lines.querySelectorAll('[data-rm]').forEach((b) => b.onclick = () => { cart[b.dataset.rm]--; render(); });
+  document.getElementById('total').textContent = money(ids.reduce((s, id) => s + prices[id] * cart[id], 0));
+  document.getElementById('cardstack-button').style.display = ids.length ? '' : 'none';
+}
+render();
+
+const status = document.getElementById('status');
+let currentOrder = null;
+
+CardStack.mount('#cardstack-button', {
+  buttonId: '{{.ButtonID}}',
+  createSession: async () => {
+    status.textContent = '';
+    const r = await fetch('/api/cardstack-session', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: cart }),
+    });
+    if (!r.ok) throw new Error('Could not start checkout');
+    const s = await r.json();
+    currentOrder = s.orderId;
+    return s;
+  },
+  onResult: (result) => {
+    // The popup's result is only a hint; the signed webhook is what marks the order paid.
+    status.innerHTML = result.status === 'approved'
+      ? '<span class="muted">Payment approved. Confirming with the server…</span>'
+      : `<span class="err">Payment not completed (${result.reason || result.state}).</span>`;
+    if (result.status === 'approved') confirm(result.orderId);
+  },
+  onError: (e) => { status.innerHTML = `<span class="err">${e.message}</span>`; },
+  onUnavailable: () => { status.innerHTML = '<span class="muted">CardStack is not available on this site.</span>'; },
+});
+
+async function confirm(orderId) {
+  for (let i = 0; i < 20; i++) {
+    const list = await (await fetch('/api/orders')).json();
+    const o = list.find((x) => x.orderId === orderId);
+    if (o && o.status === 'paid') {
+      status.innerHTML = `<span class="ok">✓ Order ${o.orderId} paid (${money(o.amountCents)}). Confirmed by signed webhook.</span>`;
+      Object.keys(cart).forEach((k) => delete cart[k]);
+      render();
+      return;
+    }
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+  status.innerHTML = '<span class="err">Still waiting for confirmation. Check your email for a receipt.</span>';
+}
+</script>
+</body>
+</html>
