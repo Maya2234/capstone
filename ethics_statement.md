@@ -176,6 +176,7 @@ Uses are sorted into the two columns from class: **Generally OK** (drafting and 
 | Claude (Claude Code) | Maya Tomarchio | Generated proof of concept demo in `app/` (Go API, consumer app, merchant demo) from the team's Technical Specification | Generally OK | 15 Go unit and API tests pass; TypeScript typecheck and lint pass; full checkout run in the browser; reviewed by Maya |
 | Claude (Claude Code) | Maya Tomarchio | Compiled the 43-card rewards dataset | Generally OK | Each row links to the issuer page; [rows spot-checked against issuer pages] |
 | Claude (Claude Code) | Maya Tomarchio | Drafted the Test Plan submission checklist and an empty Test Plan skeleton (metrics, test cases, and definition of done left blank) | Generally OK | The team wrote all metrics, test cases, and the definition of done |
+| Github Copilot | Luke Brogee | Help assist in code development for backend api service | Generally Ok | The team builds use cases for expected results and 'go' tests for algorithms and packages built using Copilot |
 
 **Confirmation**
 
