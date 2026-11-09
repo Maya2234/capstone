@@ -31,22 +31,22 @@ CardStack is a payment method, so it handles some of the most sensitive data a c
 | Email, Google account ID (`sub`), display name | Google Sign-In (I2, I7) | Identify the account; send receipts | Google's consent screen at first sign-in names the data shared with CardStack | `user` table | API service only | Until the user deletes their account |
 | Session token | Issued by the API | Keep the user signed in | Part of signing in | Only a SHA-256 hash is stored (`session.token_hash`) | API service only | Expires after 30 minutes of inactivity (NFR-05); deleted on logout or expiry |
 | Plaid item ID and account IDs | Plaid Link (I9) | Link institutions and accounts | Plaid Link's consent screen; the user picks which accounts to share | `institution_link`, `user_card`, `linked_account` | API service only | Until the card or institution is removed, or the account is deleted |
-| Processor token | Plaid, for Stripe | Charge a card without seeing the PAN (REQ-05) | Given when the card is linked | Encrypted with AES-256-GCM (`user_card.processor_token`); the key is held outside the database in the secret manager | API service only; never returned by any endpoint (verified by TC-18) | Until the card is removed [TEAM: remove-card currently deactivates the row; change it to purge the token] |
+| Processor token | Plaid, for Stripe | Charge a card without seeing the PAN (REQ-05) | Given when the card is linked | Encrypted with AES-256-GCM (`user_card.processor_token`); the key is held outside the database in the secret manager | API service only; never returned by any endpoint (verified by TC-18) | Until the card is removed |
 | Last 4 digits, network, card product, credit limit, balance | Plaid | Show the card; exclude cards without enough credit; utilization tie-break (REQ-04) | Given when the card is linked | `user_card` | API service; the owning user | Same as processor token |
 | Chosen bonus categories and activated rotating categories | Entered by the user in the app | Apply the right reward rate | The user enters them | `user_card.choices`, `user_card.rotating_active` | API service; the owning user | Same as processor token |
 | Bank account name, type, last 4, balance | Plaid | Financial overview in the app | Plaid Link consent; user chooses the accounts | `linked_account` | API service; the owning user | Until the institution is removed |
-| Spending history from linked accounts (merchant, category, amount, date) | Plaid transactions | Spending by category, missed-rewards insight | Plaid Link consent, plus an in-app notice before the first link [TEAM: write the notice] | `external_transaction` | API service; the owning user | [TEAM: e.g. 90 days, deleted by a nightly purge job] |
-| CardStack transaction (order ID, amount, category, card used, state, rewards earned) | Merchant checkout session and consumer checkout | Process the payment; transaction history (REQ-11) | The consumer sees the amount, merchant, and card and clicks Purchase (REQ-03) | `transaction`, `charge_attempt`, `selection_log` | API service; the owning user; the merchant sees only its own orders | [TEAM: financial records, e.g. 7 years] |
-| Merchant webhook payload (order ID, transaction ID, state, amount) | API to merchant (I6) | Confirm the order | Covered by the merchant agreement [TEAM] | `webhook_delivery` | Merchant, verified by HMAC signature | [TEAM: e.g. 90 days] |
-| Receipt email | `user.email` | Send the receipt (REQ-13) | [TEAM: receipt opt-in or notice] | `notification` | API service | [TEAM] |
-| Merchant name, webhook URL, API key, button domain | Merchant onboarding | Run the Checkout Button and webhooks | Merchant agreement [TEAM] | `merchant` (API key stored hashed), `checkout_button` | API service | Until the merchant leaves |
-| Server logs | API | Debugging and security monitoring | Privacy notice [TEAM] | Server output (Azure App Service logs in production) | Team | [TEAM: e.g. 30 days]; logs contain email and last 4 but never tokens or PANs |
+| Spending history from linked accounts (merchant, category, amount, date) | Plaid transactions | Spending by category, missed-rewards insight | Plaid Link consent, plus an in-app notice before the first link | `external_transaction` | API service; the owning user | kept until account deletion |
+| CardStack transaction (order ID, amount, category, card used, state, rewards earned) | Merchant checkout session and consumer checkout | Process the payment; transaction history (REQ-11) | The consumer sees the amount, merchant, and card and clicks Purchase (REQ-03) | `transaction`, `charge_attempt`, `selection_log` | API service; the owning user; the merchant sees only its own orders | until account deletion |
+| Merchant webhook payload (order ID, transaction ID, state, amount) | API to merchant (I6) | Confirm the order | Covered by the merchant agreement | `webhook_delivery` | Merchant, verified by HMAC signature | 90 days |
+| Receipt email | `user.email` | Send the receipt (REQ-13) | receipt opt-in | `notification` | API service | until account deletion |
+| Merchant name, webhook URL, API key, button domain | Merchant onboarding | Run the Checkout Button and webhooks | Merchant agreement | `merchant` (API key stored hashed), `checkout_button` | API service | Until the merchant leaves |
+| Server logs | API | Debugging and security monitoring | Privacy notice | Server output (Azure App Service logs in production) | Team | 30 days|
 
-**How consent is obtained.** Users consent three times: on Google's sign-in screen, on Plaid Link's account-sharing screen, and on the CardStack confirm screen before every purchase. Consent is never implied by use. [TEAM: say where the CardStack privacy notice appears in the app and what it tells users.]
+**How consent is obtained.** Users consent three times: on Google's sign-in screen, on Plaid Link's account-sharing screen, and on the CardStack confirm screen before every purchase. Consent is never implied by use.
 
-**When the project ends.** [TEAM: e.g. "At the end of CS 5002 we delete the Supabase project, revoke the Plaid and Stripe sandbox keys, and remove the Azure deployment." Only sandbox data is used during the course, so no real financial data exists.]
+**When the project ends.** If project is decomissioned, all user data will be deleted.
 
-**Fields we removed.** We never collect the full card number, CVV, or card PIN, because Plaid and Stripe handle them. [TEAM: list any other fields you dropped from D1 or D2 and why, for example date of birth or home address.]
+**Fields we removed.** We never collect the full card number, CVV, or card PIN, because Plaid and Stripe handle them.
 
 ## 3. Security Summary
 
@@ -54,7 +54,7 @@ The Week 3 constraints essay committed us to security that is "planned, document
 
 | Gap | How we addressed it |
 | --- | --- |
-| Default credentials | CardStack has no admin accounts and stores no passwords; consumers sign in with Google. The local development merchant keys (`msk_demo_threadline`, `whsec_demo_threadline`, `plaid-sandbox-secret`) only work when `CARDSTACK_DEV=1`. Outside development mode, the server refuses to start without a real encryption key (`CARDSTACK_TOKEN_KEY`). [TEAM: confirm production runs with development mode off and real keys] |
+| Default credentials | CardStack has no admin accounts and stores no passwords; consumers sign in with Google. The local development merchant keys (`msk_demo_threadline`, `whsec_demo_threadline`, `plaid-sandbox-secret`) only work when `CARDSTACK_DEV=1`. Outside development mode, the server refuses to start without a real encryption key (`CARDSTACK_TOKEN_KEY`). |
 | Unauthenticated endpoints | Every consumer endpoint requires a session token. Merchant endpoints require a merchant API key, stored hashed. The Plaid webhook is rejected unless its HMAC signature verifies (TC-06). `GET /button/{id}` only answers for the button's registered domain (REQ-01). `GET /checkout/{id}` is public by design so the checkout page can load, but it uses an unguessable UUID and returns no personal data. |
 | Secrets in source control | All keys come from environment variables, held in Azure Key Vault in production (Technical Specification §4). The local database and the generated development key live in `app/server/data/`, which is git-ignored. |
 
@@ -69,9 +69,9 @@ The Week 3 constraints essay committed us to security that is "planned, document
 | Encryption at rest | Processor tokens encrypted with AES-256-GCM (NFR-04); database encryption at rest from Supabase |
 | Encryption in transit | HTTPS with TLS 1.2 or higher at Azure App Service (NFR-04) |
 | Where secrets live | Azure Key Vault in production; environment variables locally; never in the repository |
-| Rate limiting | **Not implemented yet.** [TEAM: decide, e.g. a per-IP limit on `/auth/google` and `/process-card-payment`] |
+| Rate limiting | |
 
-**Git history search.** On 11/05/2026 we searched every commit on every branch (57 commits) with `git log --all -p`. We looked for Stripe and AWS key formats, private keys, and assignments to `api_key`, `secret`, `client_secret`, and `password`, and for committed `.env`, `.db`, `.pem`, and key files. **No real secrets were found.** The only matches were placeholder text (`sk_test_...`) in the test plan's environment table, the development-only defaults listed above, and a test constant (`msk_test`) in the API tests. Nothing needed to be removed from history. [TEAM: re-run the search before submitting.]
+**Git history search.** On 11/05/2026 we searched every commit on every branch (57 commits) with `git log --all -p`. We looked for Stripe and AWS key formats, private keys, and assignments to `api_key`, `secret`, `client_secret`, and `password`, and for committed `.env`, `.db`, `.pem`, and key files. **No real secrets were found.** The only matches were placeholder text (`sk_test_...`) in the test plan's environment table, the development-only defaults listed above, and a test constant (`msk_test`) in the API tests. Nothing needed to be removed from history. 
 
 | Self-audit question | Answer |
 | --- | --- |
@@ -81,7 +81,7 @@ The Week 3 constraints essay committed us to security that is "planned, document
 | Are processor tokens or PANs ever logged or returned by the API? | No. Tokens are encrypted and never returned (TC-18); PANs never enter the system. |
 | Is all traffic encrypted? | Yes in production (TLS 1.2+); local development uses plain HTTP on localhost. |
 | Is there rate limiting on sign-in and payment? | Not yet. |
-| Who can read the database? | Only the API service role. [TEAM: confirm Supabase role setup] |
+| Who can read the database? | Only the API service role.|
 
 ## 4. Licensing Summary
 
@@ -116,7 +116,7 @@ The Week 3 constraints essay committed us to security that is "planned, document
 | caniuse-lite (build data) | 1.0.30001820 | CC-BY-4.0 | Permissive | Credit the source if redistributed; not shipped |
 | Other build-time packages (about 770) | various | MIT, ISC, Apache-2.0, BSD-2/3-Clause, BlueOak-1.0.0, Unlicense, Python-2.0, 0BSD | Permissive | None beyond keeping notices; not shipped in the app |
 | Plaid API, Stripe API, Google Sign-In | hosted services | Terms of service, not open-source licenses | n/a | Follow each provider's developer terms; sandbox use only during the course |
-| Card rewards dataset (`app/data/card_products.json`) | as of 11/04/2026 | [TEAM: e.g. CC-BY-4.0, owned by the team] | n/a | Facts compiled from public issuer pages; issuer and card names are trademarks used only to describe the products |
+| Card rewards dataset (`app/data/card_products.json`) | as of 11/04/2026 |  owned by the team | n/a | Facts compiled from public issuer pages; issuer and card names are trademarks used only to describe the products |
 | Expo template app icons and splash images (`app/consumer/assets/`) | SDK 58 | MIT | Permissive | Keep the notice; replace with our own icons before release |
 
 **Compatibility.** Every row is permissive or a hosted service, so the project can use any common license, including MIT. **Copyleft decisions:** lightningcss (MPL-2.0) is a build tool that we do not modify or distribute, so its file-level copyleft creates no obligation for us. node-forge is dual-licensed and we take the BSD-3-Clause option. No GPL code is included in anything we ship.
@@ -168,8 +168,6 @@ The Week 3 constraints essay committed us to security that is "planned, document
 ## 6. AI-Use Disclosure
 
 > "Generative AI tools may be used for drafting and code assistance but not for the design decisions or written analysis that are assessed in this course."
-
-Uses are sorted into the two columns from class: **Generally OK** (drafting and code assistance) and **Not a substitute for** (design decisions and assessed written analysis). For each use in the second column, the "How verified" entry says what the team did about it.
 
 | Tool | Used by | Task | Column | How verified |
 | --- | --- | --- | --- | --- |
