@@ -12,7 +12,7 @@
 | [Tasklist.md](/Tasklist.md) | Design D3 task list with modules and owners |
 | [Design_Diagrams/](/Design_Diagrams) | D0–D3 design documents, diagrams, and peer review notes |
 | [planning/](/planning) | Effort matrix and planning checklists 
-| [ethics_statement.md | Attribution list, AI use disclosure, licenscing, security ||
+| [ethics_statement.md] | Attribution list, AI use disclosure, licenscing, security ||
 
 **Attribution list**
 
