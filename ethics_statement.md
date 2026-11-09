@@ -38,7 +38,7 @@ CardStack is a payment method, so it handles some of the most sensitive data a c
 | Spending history from linked accounts (merchant, category, amount, date) | Plaid transactions | Spending by category, missed-rewards insight | Plaid Link consent, plus an in-app notice before the first link | `external_transaction` | API service; the owning user | kept until account deletion |
 | CardStack transaction (order ID, amount, category, card used, state, rewards earned) | Merchant checkout session and consumer checkout | Process the payment; transaction history (REQ-11) | The consumer sees the amount, merchant, and card and clicks Purchase (REQ-03) | `transaction`, `charge_attempt`, `selection_log` | API service; the owning user; the merchant sees only its own orders | until account deletion |
 | Merchant webhook payload (order ID, transaction ID, state, amount) | API to merchant (I6) | Confirm the order | Covered by the merchant agreement | `webhook_delivery` | Merchant, verified by HMAC signature | 90 days |
-| Receipt email | `user.email` | Send the receipt (REQ-13) | receipt opt-in | `notification` | API service | until account deletion |
+| Receipt email | `user.email` | Send the receipt (REQ-13) | planned: receipt opt-in | `notification` | API service | until account deletion |
 | Merchant name, webhook URL, API key, button domain | Merchant onboarding | Run the Checkout Button and webhooks | Merchant agreement | `merchant` (API key stored hashed), `checkout_button` | API service | Until the merchant leaves |
 | Server logs | API | Debugging and security monitoring | Privacy notice | Server output (Azure App Service logs in production) | Team | 30 days|
 
@@ -66,7 +66,7 @@ The Week 3 constraints essay committed us to security that is "planned, document
 | Session tokens | 256-bit random tokens; only a SHA-256 hash is stored; expire after 30 minutes of inactivity (NFR-05) |
 | Merchant authentication | Secret API key per merchant, stored as a SHA-256 hash |
 | Webhooks | HMAC-SHA256 signatures on inbound Plaid and outbound merchant webhooks (NFR-05) |
-| Encryption at rest | Processor tokens encrypted with AES-256-GCM (NFR-04); database encryption at rest from Supabase |
+| planned: Encryption at rest | Processor tokens encrypted with AES-256-GCM (NFR-04); database encryption at rest from Supabase |
 | Encryption in transit | HTTPS with TLS 1.2 or higher at Azure App Service (NFR-04) |
 | Where secrets live | Azure Key Vault in production; environment variables locally; never in the repository |
 | Rate limiting | |
@@ -81,11 +81,11 @@ The Week 3 constraints essay committed us to security that is "planned, document
 | Are processor tokens or PANs ever logged or returned by the API? | No. Tokens are encrypted and never returned (TC-18); PANs never enter the system. |
 | Is all traffic encrypted? | Yes in production (TLS 1.2+); local development uses plain HTTP on localhost. |
 | Is there rate limiting on sign-in and payment? | Not yet. |
-| Who can read the database? | Only the API service role.|
+| Who can read the database? | planned: Only the API service role.|
 
 ## 4. Licensing Summary
 
-**Project license:** Project license: CardStack is released under the MIT License (SPDX: MIT). It is compatible with every row below because all dependencies are permissive (MIT, BSD, Apache-2.0) and the one copyleft build tool (lightningcss, MPL-2.0) is not modified or shipped.
+**Project license:** CardStack is released under the MIT License (SPDX: MIT). It is compatible with every row below because all dependencies are permissive (MIT, BSD, Apache-2.0) and the one copyleft build tool (lightningcss, MPL-2.0) is not modified or shipped.
 
 | Name | Version | License (SPDX) | Type | Obligation |
 | --- | --- | --- | --- | --- |
