@@ -28,7 +28,7 @@ CardStack is a payment method, so it handles some of the most sensitive data a c
 
 | Data item | Source | Purpose | Consent | Storage | Access | Retention |
 | --- | --- | --- | --- | --- | --- | --- |
-| Email, Google account ID (`sub`), display name | Google Sign-In (I2, I7) | Identify the account; send receipts | Google's consent screen at first sign-in names the data shared with CardStack | `user` table | API service only | Until the user deletes their account [TEAM: build account deletion] |
+| Email, Google account ID (`sub`), display name | Google Sign-In (I2, I7) | Identify the account; send receipts | Google's consent screen at first sign-in names the data shared with CardStack | `user` table | API service only | Until the user deletes their account |
 | Session token | Issued by the API | Keep the user signed in | Part of signing in | Only a SHA-256 hash is stored (`session.token_hash`) | API service only | Expires after 30 minutes of inactivity (NFR-05); deleted on logout or expiry |
 | Plaid item ID and account IDs | Plaid Link (I9) | Link institutions and accounts | Plaid Link's consent screen; the user picks which accounts to share | `institution_link`, `user_card`, `linked_account` | API service only | Until the card or institution is removed, or the account is deleted |
 | Processor token | Plaid, for Stripe | Charge a card without seeing the PAN (REQ-05) | Given when the card is linked | Encrypted with AES-256-GCM (`user_card.processor_token`); the key is held outside the database in the secret manager | API service only; never returned by any endpoint (verified by TC-18) | Until the card is removed [TEAM: remove-card currently deactivates the row; change it to purge the token] |
@@ -175,7 +175,6 @@ Uses are sorted into the two columns from class: **Generally OK** (drafting and 
 | --- | --- | --- | --- | --- |
 | Claude (Claude Code) | Maya Tomarchio | Generated proof of concept demo in `app/` (Go API, consumer app, merchant demo) from the team's Technical Specification | Generally OK | 15 Go unit and API tests pass; TypeScript typecheck and lint pass; full checkout run in the browser; reviewed by Maya |
 | Claude (Claude Code) | Maya Tomarchio | Compiled the 43-card rewards dataset | Generally OK | Each row links to the issuer page; [rows spot-checked against issuer pages] |
-| Claude (Claude Code) | Maya Tomarchio | Proposed implementation choices not in the spec: server-side checkout sessions, `transactionId:n` idempotency keys for fallback cards, SQLite for local development | Not a substitute for | reviewed and discussed by team |
 | Claude (Claude Code) | Maya Tomarchio | Drafted the Test Plan submission checklist and an empty Test Plan skeleton (metrics, test cases, and definition of done left blank) | Generally OK | The team wrote all metrics, test cases, and the definition of done |
 
 **Confirmation**
