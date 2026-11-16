@@ -4,7 +4,8 @@
 **Faculty Advisor:** Dr. Aurisano  
 **Documentation Lead:** Maya Tomarchio
 **Version:** 0.1 (draft) · **Date:** 11/08/2026  
-**Traces to:** [Requirements Document](Requirements_Document.md) v1.0, [Technical Specification](Technical_Specification.md) v1.0 (§3 database schema, §4 technology stack), [Constraints Essay](Constraints_Essay.md) (Week 3)
+**Traces to:** [Requirements Document](Requirements_Document.md) v1.0, [Technical Specification](Technical_Specification.md) v1.0 (§3 database schema, §4 technology stack), [Constraints Essay](Constraints_Essay.md) (Week 3)  
+**Code:** paths under `app/` refer to the prototype on the [`feature/cardstack-prototype` branch](https://github.com/Maya2234/capstone/tree/feature/cardstack-prototype/app)
 
 ## 1. Version and Change Log
 

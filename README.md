@@ -12,6 +12,7 @@
 | [Tasklist.md](/Tasklist.md) | Design D3 task list with modules and owners |
 | [Design_Diagrams/](/Design_Diagrams) | D0–D3 design documents, diagrams, and peer review notes |
 | [planning/](/planning) | Effort matrix and planning checklists 
+| [app/ (prototype branch)](https://github.com/Maya2234/capstone/tree/feature/cardstack-prototype/app) | Working prototype on the `feature/cardstack-prototype` branch: Go API, React Native consumer app, demo merchant store, and card rewards dataset |
 | [ethics_statement.md](/ethics_statement.md) | Attribution list, AI use disclosure, licenscing, security ||
 
 **Attribution list**
