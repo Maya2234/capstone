@@ -1,0 +1,5 @@
+# Prototype build output and local data (code lives on feature/cardstack-prototype)
+app/consumer/node_modules/
+app/consumer/.expo/
+app/consumer/expo-env.d.ts
+app/server/data/

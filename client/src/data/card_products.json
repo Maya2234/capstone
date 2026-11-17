@@ -1,0 +1,466 @@
+{
+  "asOf": "2026-11-04",
+  "notes": [
+    "Reward rates change often. Every product has a sourceUrl to the issuer page; verify before relying on a number.",
+    "rate is points (or cents of cash back) earned per dollar. pointValueCents is a conservative cash or travel redemption value, not a transfer-partner valuation.",
+    "Effective value of a purchase = amountCents / 100 * rate * pointValueCents.",
+    "Categories prefixed with portal: only apply when booking through the issuer's travel site, and categories prefixed with merchant: only apply at that brand. CardStack checkout ignores both unless the merchant matches.",
+    "capCents is the spend cap for the bonus rate in capPeriod; spend above it earns baseRate.",
+    "confidence is how sure we are the rates are current: high, medium, or low."
+  ],
+  "categories": [
+    "dining", "groceries", "gas", "ev_charging", "travel", "flights", "hotels", "car_rental", "transit",
+    "streaming", "drugstore", "online_retail", "entertainment", "wholesale_club", "rent", "phone", "home_improvement", "general"
+  ],
+  "products": [
+    {
+      "id": "chase-sapphire-preferred", "name": "Chase Sapphire Preferred", "issuer": "Chase", "network": "Visa",
+      "annualFeeCents": 9500, "rewardType": "points", "currency": "Chase Ultimate Rewards", "pointValueCents": 1.0, "baseRate": 1,
+      "rules": [
+        {"category": "portal:chase_travel", "rate": 5},
+        {"category": "dining", "rate": 3},
+        {"category": "groceries", "rate": 3, "note": "Online grocery only; excludes Target, Walmart, wholesale clubs"},
+        {"category": "streaming", "rate": 3},
+        {"category": "travel", "rate": 2}
+      ],
+      "sourceUrl": "https://creditcards.chase.com/rewards-credit-cards/sapphire/preferred", "confidence": "high"
+    },
+    {
+      "id": "chase-sapphire-reserve", "name": "Chase Sapphire Reserve", "issuer": "Chase", "network": "Visa",
+      "annualFeeCents": 79500, "rewardType": "points", "currency": "Chase Ultimate Rewards", "pointValueCents": 1.0, "baseRate": 1,
+      "rules": [
+        {"category": "portal:chase_travel", "rate": 8},
+        {"category": "flights", "rate": 4, "note": "Booked directly with airlines"},
+        {"category": "hotels", "rate": 4, "note": "Booked directly with hotels"},
+        {"category": "dining", "rate": 3}
+      ],
+      "sourceUrl": "https://creditcards.chase.com/rewards-credit-cards/sapphire/reserve", "confidence": "medium"
+    },
+    {
+      "id": "chase-freedom-unlimited", "name": "Chase Freedom Unlimited", "issuer": "Chase", "network": "Visa",
+      "annualFeeCents": 0, "rewardType": "points", "currency": "Chase Ultimate Rewards", "pointValueCents": 1.0, "baseRate": 1.5,
+      "rules": [
+        {"category": "portal:chase_travel", "rate": 5},
+        {"category": "dining", "rate": 3},
+        {"category": "drugstore", "rate": 3}
+      ],
+      "sourceUrl": "https://creditcards.chase.com/cash-back-credit-cards/freedom/unlimited", "confidence": "high"
+    },
+    {
+      "id": "chase-freedom-flex", "name": "Chase Freedom Flex", "issuer": "Chase", "network": "Mastercard",
+      "annualFeeCents": 0, "rewardType": "points", "currency": "Chase Ultimate Rewards", "pointValueCents": 1.0, "baseRate": 1,
+      "rotating": {"rate": 5, "capCents": 150000, "capPeriod": "quarter", "requiresActivation": true},
+      "rules": [
+        {"category": "portal:chase_travel", "rate": 5},
+        {"category": "dining", "rate": 3},
+        {"category": "drugstore", "rate": 3}
+      ],
+      "sourceUrl": "https://creditcards.chase.com/cash-back-credit-cards/freedom/flex", "confidence": "high"
+    },
+    {
+      "id": "chase-prime-visa", "name": "Prime Visa", "issuer": "Chase", "network": "Visa",
+      "annualFeeCents": 0, "rewardType": "cashback", "currency": "Cash back", "pointValueCents": 1.0, "baseRate": 1,
+      "rules": [
+        {"category": "merchant:amazon", "rate": 5, "note": "Requires Prime membership"},
+        {"category": "merchant:whole_foods", "rate": 5},
+        {"category": "portal:chase_travel", "rate": 5},
+        {"category": "gas", "rate": 2},
+        {"category": "dining", "rate": 2},
+        {"category": "transit", "rate": 2}
+      ],
+      "sourceUrl": "https://creditcards.chase.com/cash-back-credit-cards/amazon-prime-rewards", "confidence": "high"
+    },
+    {
+      "id": "chase-united-explorer", "name": "United Explorer Card", "issuer": "Chase", "network": "Visa",
+      "annualFeeCents": 15000, "rewardType": "miles", "currency": "United MileagePlus", "pointValueCents": 1.0, "baseRate": 1,
+      "rules": [
+        {"category": "merchant:united", "rate": 2},
+        {"category": "dining", "rate": 2},
+        {"category": "hotels", "rate": 2}
+      ],
+      "sourceUrl": "https://creditcards.chase.com/travel-credit-cards/united/united-explorer", "confidence": "medium"
+    },
+    {
+      "id": "chase-marriott-boundless", "name": "Marriott Bonvoy Boundless", "issuer": "Chase", "network": "Visa",
+      "annualFeeCents": 9500, "rewardType": "points", "currency": "Marriott Bonvoy", "pointValueCents": 0.7, "baseRate": 2,
+      "rules": [
+        {"category": "merchant:marriott", "rate": 6},
+        {"category": "groceries", "rate": 3, "capCents": 600000, "capPeriod": "year", "capGroup": "boundless3x"},
+        {"category": "gas", "rate": 3, "capCents": 600000, "capPeriod": "year", "capGroup": "boundless3x"},
+        {"category": "dining", "rate": 3, "capCents": 600000, "capPeriod": "year", "capGroup": "boundless3x"}
+      ],
+      "sourceUrl": "https://creditcards.chase.com/travel-credit-cards/marriott-bonvoy/boundless", "confidence": "medium"
+    },
+    {
+      "id": "chase-southwest-plus", "name": "Southwest Rapid Rewards Plus", "issuer": "Chase", "network": "Visa",
+      "annualFeeCents": 9900, "rewardType": "points", "currency": "Southwest Rapid Rewards", "pointValueCents": 1.2, "baseRate": 1,
+      "rules": [
+        {"category": "merchant:southwest", "rate": 2},
+        {"category": "groceries", "rate": 2},
+        {"category": "dining", "rate": 2}
+      ],
+      "sourceUrl": "https://creditcards.chase.com/travel-credit-cards/southwest/plus", "confidence": "low"
+    },
+    {
+      "id": "amex-gold", "name": "American Express Gold Card", "issuer": "American Express", "network": "Amex",
+      "annualFeeCents": 32500, "rewardType": "points", "currency": "Amex Membership Rewards", "pointValueCents": 1.0, "baseRate": 1,
+      "rules": [
+        {"category": "dining", "rate": 4, "capCents": 5000000, "capPeriod": "year"},
+        {"category": "groceries", "rate": 4, "capCents": 2500000, "capPeriod": "year", "note": "US supermarkets"},
+        {"category": "flights", "rate": 3, "note": "Booked directly with airlines or on AmexTravel.com"},
+        {"category": "portal:amex_travel", "rate": 2, "note": "Prepaid hotels"}
+      ],
+      "sourceUrl": "https://www.americanexpress.com/us/credit-cards/card/gold-card/", "confidence": "high"
+    },
+    {
+      "id": "amex-platinum", "name": "The Platinum Card from American Express", "issuer": "American Express", "network": "Amex",
+      "annualFeeCents": 89500, "rewardType": "points", "currency": "Amex Membership Rewards", "pointValueCents": 1.0, "baseRate": 1,
+      "rules": [
+        {"category": "flights", "rate": 5, "capCents": 50000000, "capPeriod": "year", "note": "Booked directly with airlines or on AmexTravel.com"},
+        {"category": "portal:amex_travel", "rate": 5, "note": "Prepaid hotels"}
+      ],
+      "sourceUrl": "https://www.americanexpress.com/us/credit-cards/card/platinum/", "confidence": "medium"
+    },
+    {
+      "id": "amex-green", "name": "American Express Green Card", "issuer": "American Express", "network": "Amex",
+      "annualFeeCents": 15000, "rewardType": "points", "currency": "Amex Membership Rewards", "pointValueCents": 1.0, "baseRate": 1,
+      "rules": [
+        {"category": "travel", "rate": 3},
+        {"category": "transit", "rate": 3},
+        {"category": "dining", "rate": 3}
+      ],
+      "sourceUrl": "https://www.americanexpress.com/us/credit-cards/card/green/", "confidence": "high"
+    },
+    {
+      "id": "amex-blue-cash-preferred", "name": "Blue Cash Preferred Card", "issuer": "American Express", "network": "Amex",
+      "annualFeeCents": 9500, "rewardType": "cashback", "currency": "Cash back", "pointValueCents": 1.0, "baseRate": 1,
+      "rules": [
+        {"category": "groceries", "rate": 6, "capCents": 600000, "capPeriod": "year", "note": "US supermarkets"},
+        {"category": "streaming", "rate": 6},
+        {"category": "transit", "rate": 3},
+        {"category": "gas", "rate": 3}
+      ],
+      "sourceUrl": "https://www.americanexpress.com/us/credit-cards/card/blue-cash-preferred/", "confidence": "high"
+    },
+    {
+      "id": "amex-blue-cash-everyday", "name": "Blue Cash Everyday Card", "issuer": "American Express", "network": "Amex",
+      "annualFeeCents": 0, "rewardType": "cashback", "currency": "Cash back", "pointValueCents": 1.0, "baseRate": 1,
+      "rules": [
+        {"category": "groceries", "rate": 3, "capCents": 600000, "capPeriod": "year"},
+        {"category": "online_retail", "rate": 3, "capCents": 600000, "capPeriod": "year", "note": "US online retail purchases"},
+        {"category": "gas", "rate": 3, "capCents": 600000, "capPeriod": "year"}
+      ],
+      "sourceUrl": "https://www.americanexpress.com/us/credit-cards/card/blue-cash-everyday/", "confidence": "high"
+    },
+    {
+      "id": "amex-delta-gold", "name": "Delta SkyMiles Gold Card", "issuer": "American Express", "network": "Amex",
+      "annualFeeCents": 15000, "rewardType": "miles", "currency": "Delta SkyMiles", "pointValueCents": 1.0, "baseRate": 1,
+      "rules": [
+        {"category": "merchant:delta", "rate": 2},
+        {"category": "dining", "rate": 2},
+        {"category": "groceries", "rate": 2}
+      ],
+      "sourceUrl": "https://www.americanexpress.com/us/credit-cards/card/delta-skymiles-gold-american-express-card/", "confidence": "medium"
+    },
+    {
+      "id": "amex-hilton-honors", "name": "Hilton Honors American Express Card", "issuer": "American Express", "network": "Amex",
+      "annualFeeCents": 0, "rewardType": "points", "currency": "Hilton Honors", "pointValueCents": 0.5, "baseRate": 3,
+      "rules": [
+        {"category": "merchant:hilton", "rate": 7},
+        {"category": "dining", "rate": 5},
+        {"category": "groceries", "rate": 5},
+        {"category": "gas", "rate": 5}
+      ],
+      "sourceUrl": "https://www.americanexpress.com/us/credit-cards/card/hilton-honors/", "confidence": "medium"
+    },
+    {
+      "id": "citi-double-cash", "name": "Citi Double Cash Card", "issuer": "Citi", "network": "Mastercard",
+      "annualFeeCents": 0, "rewardType": "cashback", "currency": "Citi ThankYou (cash back)", "pointValueCents": 1.0, "baseRate": 2,
+      "rules": [
+        {"category": "portal:citi_travel", "rate": 5, "note": "Hotels, car rentals and attractions"}
+      ],
+      "sourceUrl": "https://www.citi.com/credit-cards/citi-double-cash-credit-card", "confidence": "high"
+    },
+    {
+      "id": "citi-custom-cash", "name": "Citi Custom Cash Card", "issuer": "Citi", "network": "Mastercard",
+      "annualFeeCents": 0, "rewardType": "cashback", "currency": "Citi ThankYou (cash back)", "pointValueCents": 1.0, "baseRate": 1,
+      "topCategory": {"rate": 5, "capCents": 50000, "capPeriod": "month",
+        "eligible": ["dining", "groceries", "gas", "ev_charging", "travel", "transit", "streaming", "drugstore", "home_improvement", "entertainment"]},
+      "rules": [
+        {"category": "portal:citi_travel", "rate": 4}
+      ],
+      "sourceUrl": "https://www.citi.com/credit-cards/citi-custom-cash-credit-card", "confidence": "high"
+    },
+    {
+      "id": "citi-strata-premier", "name": "Citi Strata Premier Card", "issuer": "Citi", "network": "Mastercard",
+      "annualFeeCents": 9500, "rewardType": "points", "currency": "Citi ThankYou", "pointValueCents": 1.0, "baseRate": 1,
+      "rules": [
+        {"category": "portal:citi_travel", "rate": 10},
+        {"category": "flights", "rate": 3},
+        {"category": "hotels", "rate": 3},
+        {"category": "dining", "rate": 3},
+        {"category": "groceries", "rate": 3},
+        {"category": "gas", "rate": 3},
+        {"category": "ev_charging", "rate": 3}
+      ],
+      "sourceUrl": "https://www.citi.com/credit-cards/citi-strata-premier-credit-card", "confidence": "high"
+    },
+    {
+      "id": "citi-strata", "name": "Citi Strata Card", "issuer": "Citi", "network": "Mastercard",
+      "annualFeeCents": 0, "rewardType": "points", "currency": "Citi ThankYou", "pointValueCents": 1.0, "baseRate": 1,
+      "rules": [
+        {"category": "portal:citi_travel", "rate": 5},
+        {"category": "groceries", "rate": 3},
+        {"category": "gas", "rate": 3},
+        {"category": "ev_charging", "rate": 3},
+        {"category": "transit", "rate": 3},
+        {"category": "dining", "rate": 2}
+      ],
+      "sourceUrl": "https://www.citi.com/credit-cards/citi-strata-credit-card", "confidence": "low"
+    },
+    {
+      "id": "citi-costco-anywhere", "name": "Costco Anywhere Visa Card by Citi", "issuer": "Citi", "network": "Visa",
+      "annualFeeCents": 0, "rewardType": "cashback", "currency": "Costco reward certificate", "pointValueCents": 1.0, "baseRate": 1,
+      "rules": [
+        {"category": "merchant:costco_gas", "rate": 5, "capCents": 700000, "capPeriod": "year", "capGroup": "costcogas"},
+        {"category": "gas", "rate": 4, "capCents": 700000, "capPeriod": "year", "capGroup": "costcogas"},
+        {"category": "ev_charging", "rate": 4, "capCents": 700000, "capPeriod": "year", "capGroup": "costcogas"},
+        {"category": "dining", "rate": 3},
+        {"category": "travel", "rate": 3},
+        {"category": "merchant:costco", "rate": 2}
+      ],
+      "sourceUrl": "https://www.citi.com/credit-cards/citi-costco-anywhere-visa-credit-card", "confidence": "high"
+    },
+    {
+      "id": "citi-aadvantage-platinum", "name": "Citi AAdvantage Platinum Select", "issuer": "Citi", "network": "Mastercard",
+      "annualFeeCents": 9900, "rewardType": "miles", "currency": "American Airlines AAdvantage", "pointValueCents": 1.0, "baseRate": 1,
+      "rules": [
+        {"category": "merchant:american_airlines", "rate": 2},
+        {"category": "dining", "rate": 2},
+        {"category": "gas", "rate": 2}
+      ],
+      "sourceUrl": "https://www.citi.com/credit-cards/citi-aadvantage-platinum-elite-credit-card", "confidence": "medium"
+    },
+    {
+      "id": "capone-venture-x", "name": "Capital One Venture X", "issuer": "Capital One", "network": "Visa",
+      "annualFeeCents": 39500, "rewardType": "miles", "currency": "Capital One Miles", "pointValueCents": 1.0, "baseRate": 2,
+      "rules": [
+        {"category": "portal:capone_travel", "rate": 10, "note": "Hotels and rental cars"}
+      ],
+      "sourceUrl": "https://www.capitalone.com/credit-cards/venture-x/", "confidence": "high"
+    },
+    {
+      "id": "capone-venture", "name": "Capital One Venture", "issuer": "Capital One", "network": "Visa",
+      "annualFeeCents": 9500, "rewardType": "miles", "currency": "Capital One Miles", "pointValueCents": 1.0, "baseRate": 2,
+      "rules": [
+        {"category": "portal:capone_travel", "rate": 5}
+      ],
+      "sourceUrl": "https://www.capitalone.com/credit-cards/venture/", "confidence": "high"
+    },
+    {
+      "id": "capone-ventureone", "name": "Capital One VentureOne", "issuer": "Capital One", "network": "Visa",
+      "annualFeeCents": 0, "rewardType": "miles", "currency": "Capital One Miles", "pointValueCents": 1.0, "baseRate": 1.25,
+      "rules": [
+        {"category": "portal:capone_travel", "rate": 5}
+      ],
+      "sourceUrl": "https://www.capitalone.com/credit-cards/ventureone/", "confidence": "high"
+    },
+    {
+      "id": "capone-savor", "name": "Capital One Savor", "issuer": "Capital One", "network": "Mastercard",
+      "annualFeeCents": 0, "rewardType": "cashback", "currency": "Cash back", "pointValueCents": 1.0, "baseRate": 1,
+      "rules": [
+        {"category": "dining", "rate": 3},
+        {"category": "entertainment", "rate": 3},
+        {"category": "streaming", "rate": 3},
+        {"category": "groceries", "rate": 3, "note": "Excludes superstores like Walmart and Target"},
+        {"category": "portal:capone_travel", "rate": 5}
+      ],
+      "sourceUrl": "https://www.capitalone.com/credit-cards/savor/", "confidence": "high"
+    },
+    {
+      "id": "capone-quicksilver", "name": "Capital One Quicksilver", "issuer": "Capital One", "network": "Mastercard",
+      "annualFeeCents": 0, "rewardType": "cashback", "currency": "Cash back", "pointValueCents": 1.0, "baseRate": 1.5,
+      "rules": [
+        {"category": "portal:capone_travel", "rate": 5}
+      ],
+      "sourceUrl": "https://www.capitalone.com/credit-cards/quicksilver/", "confidence": "high"
+    },
+    {
+      "id": "discover-it-cash-back", "name": "Discover it Cash Back", "issuer": "Discover", "network": "Discover",
+      "annualFeeCents": 0, "rewardType": "cashback", "currency": "Cash back", "pointValueCents": 1.0, "baseRate": 1,
+      "rotating": {"rate": 5, "capCents": 150000, "capPeriod": "quarter", "requiresActivation": true},
+      "rules": [],
+      "sourceUrl": "https://www.discover.com/credit-cards/cash-back/it-card.html", "confidence": "high"
+    },
+    {
+      "id": "discover-it-chrome", "name": "Discover it Chrome", "issuer": "Discover", "network": "Discover",
+      "annualFeeCents": 0, "rewardType": "cashback", "currency": "Cash back", "pointValueCents": 1.0, "baseRate": 1,
+      "rules": [
+        {"category": "gas", "rate": 2, "capCents": 100000, "capPeriod": "quarter", "capGroup": "chrome2x"},
+        {"category": "dining", "rate": 2, "capCents": 100000, "capPeriod": "quarter", "capGroup": "chrome2x"}
+      ],
+      "sourceUrl": "https://www.discover.com/credit-cards/cash-back/chrome-card.html", "confidence": "high"
+    },
+    {
+      "id": "wf-active-cash", "name": "Wells Fargo Active Cash", "issuer": "Wells Fargo", "network": "Visa",
+      "annualFeeCents": 0, "rewardType": "cashback", "currency": "Cash rewards", "pointValueCents": 1.0, "baseRate": 2,
+      "rules": [],
+      "sourceUrl": "https://creditcards.wellsfargo.com/active-cash-credit-card/", "confidence": "high"
+    },
+    {
+      "id": "wf-autograph", "name": "Wells Fargo Autograph", "issuer": "Wells Fargo", "network": "Visa",
+      "annualFeeCents": 0, "rewardType": "points", "currency": "Wells Fargo Rewards", "pointValueCents": 1.0, "baseRate": 1,
+      "rules": [
+        {"category": "dining", "rate": 3},
+        {"category": "travel", "rate": 3},
+        {"category": "gas", "rate": 3},
+        {"category": "ev_charging", "rate": 3},
+        {"category": "transit", "rate": 3},
+        {"category": "streaming", "rate": 3},
+        {"category": "phone", "rate": 3}
+      ],
+      "sourceUrl": "https://creditcards.wellsfargo.com/autograph-visa-credit-card/", "confidence": "high"
+    },
+    {
+      "id": "wf-autograph-journey", "name": "Wells Fargo Autograph Journey", "issuer": "Wells Fargo", "network": "Visa",
+      "annualFeeCents": 9500, "rewardType": "points", "currency": "Wells Fargo Rewards", "pointValueCents": 1.0, "baseRate": 1,
+      "rules": [
+        {"category": "hotels", "rate": 5},
+        {"category": "flights", "rate": 4},
+        {"category": "travel", "rate": 3},
+        {"category": "dining", "rate": 3}
+      ],
+      "sourceUrl": "https://creditcards.wellsfargo.com/autograph-journey-visa-credit-card/", "confidence": "high"
+    },
+    {
+      "id": "boa-customized-cash", "name": "Bank of America Customized Cash Rewards", "issuer": "Bank of America", "network": "Visa",
+      "annualFeeCents": 0, "rewardType": "cashback", "currency": "Cash back", "pointValueCents": 1.0, "baseRate": 1,
+      "choiceCategory": {"rate": 3, "default": "gas", "capCents": 250000, "capPeriod": "quarter", "capGroup": "boacc",
+        "options": ["gas", "ev_charging", "online_retail", "dining", "travel", "drugstore", "home_improvement"]},
+      "rules": [
+        {"category": "groceries", "rate": 2, "capCents": 250000, "capPeriod": "quarter", "capGroup": "boacc"},
+        {"category": "wholesale_club", "rate": 2, "capCents": 250000, "capPeriod": "quarter", "capGroup": "boacc"}
+      ],
+      "sourceUrl": "https://www.bankofamerica.com/credit-cards/products/cash-back-credit-card/", "confidence": "high"
+    },
+    {
+      "id": "boa-unlimited-cash", "name": "Bank of America Unlimited Cash Rewards", "issuer": "Bank of America", "network": "Visa",
+      "annualFeeCents": 0, "rewardType": "cashback", "currency": "Cash back", "pointValueCents": 1.0, "baseRate": 1.5,
+      "rules": [],
+      "sourceUrl": "https://www.bankofamerica.com/credit-cards/products/unlimited-cash-back-credit-card/", "confidence": "high"
+    },
+    {
+      "id": "boa-travel-rewards", "name": "Bank of America Travel Rewards", "issuer": "Bank of America", "network": "Visa",
+      "annualFeeCents": 0, "rewardType": "points", "currency": "BofA Travel Rewards", "pointValueCents": 1.0, "baseRate": 1.5,
+      "rules": [
+        {"category": "portal:boa_travel", "rate": 3}
+      ],
+      "sourceUrl": "https://www.bankofamerica.com/credit-cards/products/travel-rewards-credit-card/", "confidence": "high"
+    },
+    {
+      "id": "boa-premium-rewards", "name": "Bank of America Premium Rewards", "issuer": "Bank of America", "network": "Visa",
+      "annualFeeCents": 9500, "rewardType": "points", "currency": "BofA Premium Rewards", "pointValueCents": 1.0, "baseRate": 1.5,
+      "rules": [
+        {"category": "travel", "rate": 2},
+        {"category": "dining", "rate": 2}
+      ],
+      "sourceUrl": "https://www.bankofamerica.com/credit-cards/products/premium-rewards-credit-card/", "confidence": "high"
+    },
+    {
+      "id": "usbank-altitude-go", "name": "U.S. Bank Altitude Go", "issuer": "U.S. Bank", "network": "Visa",
+      "annualFeeCents": 0, "rewardType": "points", "currency": "U.S. Bank Altitude", "pointValueCents": 1.0, "baseRate": 1,
+      "rules": [
+        {"category": "dining", "rate": 4},
+        {"category": "groceries", "rate": 2},
+        {"category": "gas", "rate": 2},
+        {"category": "ev_charging", "rate": 2},
+        {"category": "streaming", "rate": 2}
+      ],
+      "sourceUrl": "https://www.usbank.com/credit-cards/altitude-go-visa-signature-credit-card.html", "confidence": "high"
+    },
+    {
+      "id": "usbank-cash-plus", "name": "U.S. Bank Cash+", "issuer": "U.S. Bank", "network": "Visa",
+      "annualFeeCents": 0, "rewardType": "cashback", "currency": "Cash back", "pointValueCents": 1.0, "baseRate": 1,
+      "choiceCategory": {"rate": 5, "picks": 2, "default": "streaming", "capCents": 200000, "capPeriod": "quarter",
+        "options": ["streaming", "phone", "home_improvement", "entertainment", "online_retail", "transit", "drugstore"]},
+      "rules": [
+        {"category": "groceries", "rate": 2, "note": "One 2% category of your choice: groceries, gas/EV, or restaurants"},
+        {"category": "portal:usbank_travel", "rate": 5}
+      ],
+      "sourceUrl": "https://www.usbank.com/credit-cards/cash-plus-visa-signature-credit-card.html", "confidence": "medium"
+    },
+    {
+      "id": "usbank-shopper-cash", "name": "U.S. Bank Shopper Cash Rewards", "issuer": "U.S. Bank", "network": "Visa",
+      "annualFeeCents": 9500, "rewardType": "cashback", "currency": "Cash back", "pointValueCents": 1.0, "baseRate": 1.5,
+      "rules": [
+        {"category": "online_retail", "rate": 6, "capCents": 150000, "capPeriod": "quarter", "note": "Two retailers you choose from a list, such as Amazon or Target"},
+        {"category": "groceries", "rate": 3, "note": "One 3% everyday category of your choice"}
+      ],
+      "sourceUrl": "https://www.usbank.com/credit-cards/shopper-cash-rewards-visa-signature-credit-card.html", "confidence": "medium"
+    },
+    {
+      "id": "apple-card", "name": "Apple Card", "issuer": "Goldman Sachs", "network": "Mastercard",
+      "annualFeeCents": 0, "rewardType": "cashback", "currency": "Daily Cash", "pointValueCents": 1.0, "baseRate": 2,
+      "rules": [
+        {"category": "merchant:apple", "rate": 3},
+        {"category": "merchant:uber", "rate": 3},
+        {"category": "merchant:walgreens", "rate": 3},
+        {"category": "merchant:nike", "rate": 3}
+      ],
+      "notes": "2% applies to Apple Pay purchases; CardStack charges count as card-not-present, which may earn only 1%.",
+      "sourceUrl": "https://www.apple.com/apple-card/", "confidence": "medium"
+    },
+    {
+      "id": "paypal-cashback-mastercard", "name": "PayPal Cashback Mastercard", "issuer": "Synchrony", "network": "Mastercard",
+      "annualFeeCents": 0, "rewardType": "cashback", "currency": "Cash back", "pointValueCents": 1.0, "baseRate": 2,
+      "rules": [
+        {"category": "merchant:paypal", "rate": 3}
+      ],
+      "sourceUrl": "https://www.paypal.com/us/digital-wallet/manage-money/paypal-cashback-mastercard", "confidence": "medium"
+    },
+    {
+      "id": "bilt-mastercard", "name": "Bilt Mastercard", "issuer": "Bilt", "network": "Mastercard",
+      "annualFeeCents": 0, "rewardType": "points", "currency": "Bilt Rewards", "pointValueCents": 1.0, "baseRate": 1,
+      "rules": [
+        {"category": "dining", "rate": 3},
+        {"category": "travel", "rate": 2},
+        {"category": "rent", "rate": 1, "note": "Rent payments with no transaction fee"}
+      ],
+      "notes": "Bilt changed its card lineup in 2026; rates here may be out of date.",
+      "sourceUrl": "https://www.biltrewards.com/card", "confidence": "low"
+    },
+    {
+      "id": "target-circle-card", "name": "Target Circle Card (credit)", "issuer": "TD Bank", "network": "Mastercard",
+      "annualFeeCents": 0, "rewardType": "cashback", "currency": "Discount at checkout", "pointValueCents": 1.0, "baseRate": 0,
+      "rules": [
+        {"category": "merchant:target", "rate": 5}
+      ],
+      "sourceUrl": "https://www.target.com/circlecard", "confidence": "high"
+    },
+    {
+      "id": "fidelity-rewards-visa", "name": "Fidelity Rewards Visa Signature", "issuer": "Elan", "network": "Visa",
+      "annualFeeCents": 0, "rewardType": "cashback", "currency": "Deposit to Fidelity account", "pointValueCents": 1.0, "baseRate": 2,
+      "rules": [],
+      "sourceUrl": "https://www.fidelity.com/spend-save/visa-signature-card", "confidence": "high"
+    }
+  ],
+  "merchantCategoryMap": {
+    "Clothing": ["online_retail", "general"],
+    "Electronics": ["online_retail", "general"],
+    "Home": ["home_improvement", "online_retail", "general"],
+    "Groceries": ["groceries", "online_retail", "general"],
+    "Restaurants": ["dining", "general"],
+    "Food Delivery": ["dining", "general"],
+    "Travel": ["travel", "general"],
+    "Airline": ["flights", "travel", "general"],
+    "Hotel": ["hotels", "travel", "general"],
+    "Car Rental": ["car_rental", "travel", "general"],
+    "Rideshare": ["transit", "travel", "general"],
+    "Gas": ["gas", "general"],
+    "Streaming": ["streaming", "entertainment", "general"],
+    "Entertainment": ["entertainment", "general"],
+    "Pharmacy": ["drugstore", "general"],
+    "Phone": ["phone", "general"],
+    "General": ["online_retail", "general"]
+  }
+}
