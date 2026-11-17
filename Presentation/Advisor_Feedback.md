@@ -5,8 +5,6 @@
 **Advisor:** Dr. Aurisano
 **Deck reviewed:** [CardStack_Design_Presentation_Draft.pptx](CardStack_Design_Presentation_Draft.pptx) ([PDF](CardStack_Design_Presentation_Draft.pdf))
 
-> **To the team:** sections 1–3 can only be filled in after the advisor meeting. The rows below are blank on purpose; record what was actually said. Expect 5–10 items from a 30-minute session, and give every item an owner before leaving the meeting.
-
 ## 1. Meeting record
 
 | Field | Value |
