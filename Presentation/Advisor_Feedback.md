@@ -1,4 +1,4 @@
-# Advisor Feedback: Fall Design Presentation (Draft)
+# Advisor Feedback: Design Presentation
 
 **Project:** CardStack
 **Team:** Luke Brogee, Maya Tomarchio
