@@ -48,13 +48,7 @@ _3 to 6 sentences written after the changes are made. Cover what changed in the 
 | Rehearse with a timer; each speaker within ±15 s of the outline (backup slide 11) | Luke and Maya | _before Week 13_ |
 | Commit the revised deck and put the repository link and commit hash in the Canvas comment | Maya | _submission day_ |
 
-## Draft decisions already made (for the advisor to react to)
-
-- **Cut from the earlier pitch deck:** Problem, Solution, Product, Market Size, Business Model and Competition. The assignment fixes nine topics in order. The problem now lives in the title slide's purpose statement and in the abstract.
-- **Ten slides, not nine:** topic 4 is split into user stories (slide 4) and the redrawn D0 diagram (slide 5) so neither is crowded. Full D1 and D2 are backup slides 13–15.
-- **One accent color:** violet, on the original deck's deep purple. Light blue appears only in the logo.
-- **Timing:** 600 seconds, 300 per speaker (backup slide 11, and the speaker notes on every slide).
 
 ## Use of AI tools
 
-Claude (Anthropic) was used to lay out the draft slides and draft their wording from the team's existing documents: the Requirements Document, User Stories, Constraints Essay, Effort Matrix, Test Plan and D0–D2. It was also used to draft this file's structure. The project content, design decisions and analysis come from those team documents. The same disclosure is on the deck's final backup slide.
+Claude (Anthropic) was used to lay out the draft slides and draft their wording from the team's existing documents: the Requirements Document, User Stories, Constraints Essay, Effort Matrix, Test Plan and D0–D2. It was also used to draft this file's structure. The project content, design decisions and analysis come from those team documents.
