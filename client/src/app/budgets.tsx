@@ -32,7 +32,8 @@ export default function Budgets() {
     for (const b of saved) if (!draft.some((d) => d.category === b.category)) removeBudget(b.category);
     for (const d of draft) setBudget(d.category, Math.round(Number(d.value) * 100));
     toast('Budgets saved');
-    router.back();
+    if (router.canGoBack()) router.back();
+    else router.replace('/');
   }
   const add = (c: CategoryId) => {
     const spent = byCategory.get(c) ?? 0;

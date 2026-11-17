@@ -5,7 +5,7 @@ import { Pressable, View } from 'react-native';
 
 import { useStore } from '@/data/store';
 import type { Prefs } from '@/data/types';
-import { sendPasswordReset } from '@/services/auth';
+import { sendPasswordReset, signOut } from '@/services/auth';
 import { useTheme, useWide } from '@/theme/theme';
 import { space } from '@/theme/tokens';
 import { Avatar, Divider, Row, SectionHeader } from '@/ui/bits';
@@ -131,7 +131,6 @@ function Account() {
   const t = useTheme();
   const toast = useToast();
   const email = useStore((s) => s.profile.email);
-  const signOut = useStore((s) => s.signOut);
   const [sending, setSending] = useState(false);
   async function reset() {
     setSending(true);
@@ -156,7 +155,7 @@ function Account() {
           chevron
         />
         <Divider inset={12} />
-        <Row onPress={signOut} left={<LogOut size={20} color={t.danger} />} title="Log out" />
+        <Row onPress={() => signOut()} left={<LogOut size={20} color={t.danger} />} title="Log out" />
       </Surface>
     </View>
   );

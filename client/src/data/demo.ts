@@ -16,8 +16,8 @@ export const INSTITUTIONS: Institution[] = [
   { id: 'boa', name: 'Bank of America', color: '#3A2E9C' },
 ];
 
-export function institution(id: string) {
-  return INSTITUTIONS.find((i) => i.id === id) ?? { id, name: id, color: '#4039DF' };
+export function institution(id: string, name?: string) {
+  return INSTITUTIONS.find((i) => i.id === id) ?? { id, name: name ?? id, color: '#4039DF' };
 }
 
 const ago = (days: number) => new Date(Date.now() - days * 864e5).toISOString();

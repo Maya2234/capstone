@@ -4,8 +4,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
-import { useStore } from '@/data/store';
-import { sendPasswordReset, signInWithEmail, signInWithGoogle } from '@/services/auth';
+import { NO_MATCH, sendPasswordReset, signInWithEmail, signInWithGoogle, signUpWithEmail } from '@/services/auth';
 import { useTheme, useWide } from '@/theme/theme';
 import { palette, radius, space } from '@/theme/tokens';
 import { Button } from '@/ui/Button';
@@ -54,9 +53,9 @@ function BrandPanel() {
       <View style={{ padding: 48, flex: 1, justifyContent: 'space-between' }}>
         <Wordmark height={34} tone="#FFFFFF" />
         <View style={{ gap: space.md, maxWidth: 420 }}>
-          <Text variant="hero" tone="inverse" style={{ fontSize: 48, lineHeight: 52 }}>Every card,{'\n'}maxed out.</Text>
+          <Text variant="hero" tone="inverse" style={{ fontSize: 48, lineHeight: 52 }}>Put Your Cards to Work.</Text>
           <Text variant="body" tone="inverse" style={{ opacity: 0.9, fontSize: 17, lineHeight: 26 }}>
-            All your accounts in one place, and the best card picked for you at checkout.
+            All your cards in one place, your best card automatically selected at checkout.
           </Text>
         </View>
       </View>
@@ -67,21 +66,20 @@ function BrandPanel() {
 function Form() {
   const t = useTheme();
   const toast = useToast();
-  const signIn = useStore((s) => s.signIn);
   const [mode, setMode] = useState<'in' | 'up'>('in');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<'google' | 'email' | null>(null);
+  const [noMatch, setNoMatch] = useState(false);
 
   async function google() {
     setBusy('google');
     try {
-      const u = await signInWithGoogle();
-      signIn(u.email, 'google', u.name);
-    } catch {
-      toast('Google sign-in didn’t finish', 'error');
+      await signInWithGoogle();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Google sign-in didn’t finish', 'error');
       setBusy(null);
     }
   }
@@ -95,12 +93,29 @@ function Form() {
     if (Object.keys(e).length) return;
     setBusy('email');
     try {
-      const u = await signInWithEmail(email, password);
-      signIn(u.email, 'email', mode === 'up' ? name.trim() : undefined);
+      // On success the auth listener loads this user's data and the app opens (src/data/sync.ts).
+      if (mode === 'up') {
+        const { needsConfirmation } = await signUpWithEmail(name, email, password);
+        if (needsConfirmation) {
+          toast(`Check ${email.trim()} for a link to confirm your account`);
+          setMode('in');
+          setBusy(null);
+        }
+      } else {
+        await signInWithEmail(email, password);
+      }
     } catch (err) {
-      toast(err instanceof Error ? err.message : 'Couldn’t sign in', 'error');
+      const message = err instanceof Error ? err.message : 'Couldn’t sign in';
+      if (message === NO_MATCH) setNoMatch(true);
+      else toast(message, 'error');
       setBusy(null);
     }
+  }
+
+  function switchMode(next: 'in' | 'up') {
+    setMode(next);
+    setErrors({});
+    setNoMatch(false);
   }
 
   async function forgot() {
@@ -108,8 +123,12 @@ function Form() {
       setErrors({ email: 'Enter your email and we’ll send a reset link' });
       return;
     }
-    await sendPasswordReset(email.trim());
-    toast(`Reset link sent to ${email.trim()}`);
+    try {
+      await sendPasswordReset(email.trim());
+      toast(`Reset link sent to ${email.trim()}`);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Couldn’t send the link', 'error');
+    }
   }
 
   return (
@@ -139,11 +158,19 @@ function Form() {
       </View>
 
       {mode === 'up' && <Input label="Name" value={name} onChangeText={setName} autoComplete="name" error={errors.name} />}
-      <Input label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" error={errors.email} />
+      <Input
+        label="Email"
+        value={email}
+        onChangeText={(v) => { setEmail(v); setNoMatch(false); }}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoComplete="email"
+        error={errors.email}
+      />
       <Input
         label="Password"
         value={password}
-        onChangeText={setPassword}
+        onChangeText={(v) => { setPassword(v); setNoMatch(false); }}
         secureTextEntry
         autoComplete={mode === 'in' ? 'current-password' : 'new-password'}
         error={errors.password}
@@ -154,11 +181,19 @@ function Form() {
           <Text variant="smallStrong" tone="primary">Forgot password?</Text>
         </Pressable>
       )}
+      {mode === 'in' && noMatch && (
+        <View accessibilityRole="alert" style={[styles.alert, { backgroundColor: t.dangerSoft }]}>
+          <Text variant="small" tone="danger">{NO_MATCH}</Text>
+          <Pressable accessibilityRole="button" onPress={() => switchMode('up')} hitSlop={8}>
+            <Text variant="smallStrong" tone="danger" style={{ textDecorationLine: 'underline' }}>New here? Create an account with this email</Text>
+          </Pressable>
+        </View>
+      )}
       <Button label={mode === 'in' ? 'Sign in' : 'Create account'} size="lg" onPress={submit} loading={busy === 'email'} disabled={busy === 'google'} full />
 
       <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6 }}>
         <Text variant="small" tone="muted">{mode === 'in' ? 'New to CardMaxx?' : 'Already have an account?'}</Text>
-        <Pressable accessibilityRole="button" onPress={() => { setMode(mode === 'in' ? 'up' : 'in'); setErrors({}); }} hitSlop={8}>
+        <Pressable accessibilityRole="button" onPress={() => switchMode(mode === 'in' ? 'up' : 'in')} hitSlop={8}>
           <Text variant="smallStrong" tone="primary">{mode === 'in' ? 'Create an account' : 'Sign in'}</Text>
         </Pressable>
       </View>
@@ -179,5 +214,6 @@ function GoogleG() {
 
 const styles = StyleSheet.create({
   panel: { flex: 1, maxWidth: 640, overflow: 'hidden', borderTopRightRadius: radius.xl, borderBottomRightRadius: radius.xl },
+  alert: { borderRadius: radius.md, paddingVertical: 12, paddingHorizontal: 14, gap: 6 },
   google: { height: 52, borderRadius: radius.pill, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
 });

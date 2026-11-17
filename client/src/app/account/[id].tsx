@@ -42,7 +42,7 @@ export default function AccountDetail() {
       </Screen>
     );
   }
-  const inst = institution(account.institutionId);
+  const inst = institution(account.institutionId, account.institutionName);
   const isCredit = account.type === 'credit';
 
   async function disconnect() {

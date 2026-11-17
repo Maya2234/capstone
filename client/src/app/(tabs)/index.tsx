@@ -145,7 +145,7 @@ function Accounts() {
 function AccountRow({ a }: { a: Account }) {
   const t = useTheme();
   const wide = useWide();
-  const inst = institution(a.institutionId);
+  const inst = institution(a.institutionId, a.institutionName);
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
       <View style={{ flex: 1 }}>

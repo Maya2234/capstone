@@ -70,7 +70,8 @@ function Details({ product, onBack }: { product: Product; onBack: () => void }) 
     if (!/^\d{4}$/.test(mask)) return setError('Enter the last 4 digits');
     addCard({ productId: product.id, mask, nickname: nickname.trim() || undefined });
     toast(`${product.name} added`);
-    router.back();
+    if (router.canGoBack()) router.back();
+    else router.replace('/');
   }
   return (
     <Sheet

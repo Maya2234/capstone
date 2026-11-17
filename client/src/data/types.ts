@@ -7,6 +7,7 @@ export type Institution = { id: string; name: string; color: string };
 export type Account = {
   id: string;
   institutionId: string;
+  institutionName?: string; // from Plaid; demo banks look theirs up by id
   name: string;
   type: AccountType;
   mask: string; // last four

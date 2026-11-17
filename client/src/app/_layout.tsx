@@ -17,6 +17,7 @@ import { Platform, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useHydrated, useStore } from '@/data/store';
+import { startAuthSync } from '@/data/sync';
 import { ThemeProvider, useTheme } from '@/theme/theme';
 import { ToastProvider } from '@/ui/Toast';
 
@@ -32,7 +33,12 @@ export default function RootLayout() {
     PlusJakartaSans_700Bold,
   });
   const hydrated = useHydrated();
-  const ready = (fontsLoaded || !!fontError) && hydrated;
+  const authReady = useStore((s) => s.authReady);
+  const ready = (fontsLoaded || !!fontError) && hydrated && authReady;
+
+  useEffect(() => {
+    startAuthSync();
+  }, []);
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync();
@@ -69,6 +75,7 @@ function Navigator() {
           <Stack.Screen name="link" options={sheet} />
           <Stack.Screen name="add-card" options={sheet} />
           <Stack.Screen name="budgets" options={sheet} />
+          <Stack.Screen name="new-password" />
         </Stack.Protected>
         <Stack.Protected guard={!signedIn}>
           <Stack.Screen name="sign-in" />

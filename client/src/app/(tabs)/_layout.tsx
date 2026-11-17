@@ -65,30 +65,30 @@ function DesktopHeader() {
   return (
     <View style={[styles.desktopBar, { backgroundColor: t.bg, borderBottomColor: t.border }]}>
       <View style={styles.desktopInner}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.lg }}>
+        <Pressable accessibilityRole="link" accessibilityLabel="CardMaxx home" onPress={() => router.navigate('/')}>
+          <Wordmark height={30} />
+        </Pressable>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+          <View accessibilityRole="tablist" style={[styles.pillGroup, { backgroundColor: t.surface, borderColor: t.border }]}>
+            {TABS.map((tab) => {
+              const on = isActive(tab.href);
+              return (
+                <Pressable
+                  key={tab.name}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: on }}
+                  onPress={() => router.navigate(tab.href)}
+                  style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
+                    styles.pill,
+                    { backgroundColor: on ? t.primary : pressed || hovered ? t.surfaceAlt : 'transparent' },
+                  ]}>
+                  <tab.icon size={17} color={on ? t.onPrimary : t.textMuted} strokeWidth={2.2} />
+                  <Text variant="smallStrong" style={{ color: on ? t.onPrimary : t.textMuted, fontSize: 14 }}>{tab.label}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
           <SettingsButton />
-          <Pressable accessibilityRole="link" accessibilityLabel="CardMaxx home" onPress={() => router.navigate('/')}>
-            <Wordmark height={30} />
-          </Pressable>
-        </View>
-        <View accessibilityRole="tablist" style={[styles.pillGroup, { backgroundColor: t.surface, borderColor: t.border }]}>
-          {TABS.map((tab) => {
-            const on = isActive(tab.href);
-            return (
-              <Pressable
-                key={tab.name}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: on }}
-                onPress={() => router.navigate(tab.href)}
-                style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
-                  styles.pill,
-                  { backgroundColor: on ? t.primary : pressed || hovered ? t.surfaceAlt : 'transparent' },
-                ]}>
-                <tab.icon size={17} color={on ? t.onPrimary : t.textMuted} strokeWidth={2.2} />
-                <Text variant="smallStrong" style={{ color: on ? t.onPrimary : t.textMuted, fontSize: 14 }}>{tab.label}</Text>
-              </Pressable>
-            );
-          })}
         </View>
       </View>
     </View>
@@ -100,9 +100,10 @@ function MobileHeader() {
   const insets = useSafeAreaInsets();
   return (
     <View style={[styles.mobileBar, { paddingTop: insets.top + 8, backgroundColor: t.bg }]}>
-      <SettingsButton />
+      {/* Same width as the gear, so the wordmark stays centered */}
+      <View style={{ width: 42 }} />
       <Wordmark height={26} />
-      <View style={{ width: 40 }} />
+      <SettingsButton />
     </View>
   );
 }
