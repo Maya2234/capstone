@@ -9,42 +9,29 @@
 
 | Field | Value |
 | --- | --- |
-| Date | _MM/DD/YYYY_ |
-| Duration | _minutes_ |
+| Date | 11/17/26 |
+| Duration | 20 minutes |
 | Attendees | Dr. Aurisano, Luke Brogee, Maya Tomarchio |
-| Format | _In person (Langsam Library, Thursday 3:30 pm) / Teams / Zoom_ |
-| Version reviewed | Commit `_hash_` of `Presentation/CardStack_Design_Presentation_Draft.pptx` |
+| Format | Langsam Library |
+| Version reviewed | 764f14e |
 
 ## 2. Feedback log
 
-Response is one of **Accepted**, **Modified** or **Declined**. A decline needs a reason. Status is **Open** or **Done**.
-
-| # | Slides | What the advisor said | Response | Change made | Owner | Status |
-| --- | --- | --- | --- | --- | --- | --- |
-| F-01 | | | | | | |
-| F-02 | | | | | | |
-| F-03 | | | | | | |
-| F-04 | | | | | | |
-| F-05 | | | | | | |
-| F-06 | | | | | | |
-| F-07 | | | | | | |
-| F-08 | | | | | | |
+Dr. Aurisano accepted draft deck in full, no changes were requested. 
 
 ## 3. Summary of changes
 
-_3 to 6 sentences written after the changes are made. Cover what changed in the deck, which suggestions were declined and why, and how the talk timing moved, if it did._
+Updated expected by demo and expected by end of term. Simplified design diagram and made user stories more specific. Updated title slide / logo. Editied Abstract to align better with app purpose and read more clearly.
 
 ## 4. Open items
 
 | Item | Owner | Expected close |
 | --- | --- | --- |
-| Hold the advisor review and fill in sections 1–3 | Maya | _date of meeting_ |
-| Confirm the slide 8 build goals (Supabase sign-in, Plaid Sandbox) are realistic for this term | Luke and Maya | _at advisor meeting_ |
-| Do a test recording to check audio, per the recording plan (backup slide 12) | Luke | _this week_ |
-| Record the 90-second fallback video of the Expo demo (slide 10) | Luke | _before Week 13_ |
-| Confirm where the video link lives and who posts links to the team spreadsheet | Luke | _before Week 13_ |
-| Rehearse with a timer; each speaker within ±15 s of the outline (backup slide 11) | Luke and Maya | _before Week 13_ |
-| Commit the revised deck and put the repository link and commit hash in the Canvas comment | Maya | _submission day_ |
+| Hold the advisor review and fill in sections 1–3 | Maya | 11/17/26 |
+| Confirm the slide 8 build goals (Supabase sign-in, Plaid Sandbox) are realistic for this term | Luke and Maya | 11/17/26 |
+| Record the 90-second fallback video of the Expo demo | Luke |11/17/26 |
+| Rehearse with a timer; each speaker within ±15 s of the outline (backup slide 11) | Luke and Maya | 11/17/26 |
+| Commit the revised deck and put the repository link and commit hash in the Canvas comment | Maya | 11/18/26 |
 
 
 ## Use of AI tools
