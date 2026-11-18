@@ -1,6 +1,8 @@
 // POST /api/contact — sends the Help form to the support inbox through Resend.
 // Needs RESEND_API_KEY, CONTACT_TO_EMAIL and CONTACT_FROM_EMAIL in client/.env (see .env.example).
 
+import { rateLimit } from '@/server/rateLimit';
+
 const MAX = { name: 100, email: 200, topic: 60, message: 4000 };
 const recent = new Map<string, number[]>(); // simple per-address rate limit: 5 per 10 minutes
 
@@ -26,6 +28,10 @@ export async function POST(request: Request) {
   const now = Date.now();
   const hits = (recent.get(email) ?? []).filter((t) => now - t < 10 * 60_000);
   if (hits.length >= 5) return Response.json({ error: 'Too many messages. Please try again later.' }, { status: 429 });
+  // The per-address limit is easy to dodge with made-up addresses, so also cap per sender and overall.
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'local';
+  const limited = rateLimit('contact:ip:' + ip, 10, 60 * 60_000) ?? rateLimit('contact:all', 100, 60 * 60_000);
+  if (limited) return limited;
   recent.set(email, [...hits, now]);
 
   const key = process.env.RESEND_API_KEY;

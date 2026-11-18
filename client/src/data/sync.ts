@@ -1,11 +1,13 @@
 // Keeps the store in step with Supabase Auth: loads a user's data when they sign in
 // (creating starter data on their first sign-in) and clears it when they sign out.
+// After loading, it asks the server to refresh linked Plaid banks in the background.
 
 import type { User } from '@supabase/supabase-js';
 import { router } from 'expo-router';
 
 import { supabase } from '@/lib/supabase';
-import { createUserData, loadUserData } from '@/services/db';
+import { createUserData, loadTransactions, loadUserData } from '@/services/db';
+import { isPlaidAccount, refreshPlaid } from '@/services/plaid';
 
 import { DEFAULT_PREFS, starterData, useStore } from './store';
 
@@ -28,6 +30,7 @@ async function signedIn(user: User) {
     }
     const method = user.app_metadata?.provider === 'google' ? 'google' : 'email';
     useStore.getState().setSignedIn({ userId: user.id, email, method }, data);
+    if (data.accounts.some((a) => isPlaidAccount(a.id))) void refreshBanks();
   } catch (e) {
     console.warn('[CardMaxx] Couldn’t load your data:', e instanceof Error ? e.message : e);
     // Without data the app can't show anything useful, so back out to the sign-in screen.
@@ -35,6 +38,31 @@ async function signedIn(user: User) {
   } finally {
     loadingFor = null;
   }
+}
+
+let refreshing: Promise<{ failed: string[] }> | null = null;
+
+/**
+ * New transactions and fresh balances for every Plaid bank. Safe to call often: calls made
+ * while one is running share it. Failures are logged; the app keeps what it already has.
+ */
+export function refreshBanks(): Promise<{ failed: string[] }> {
+  refreshing ??= (async () => {
+    try {
+      const { accounts, failed } = await refreshPlaid();
+      const store = useStore.getState();
+      if (!store.session) return { failed: [] };
+      store.refreshAccounts(accounts);
+      store.setTransactions(await loadTransactions());
+      return { failed };
+    } catch (e) {
+      console.warn('[CardMaxx] Couldn’t refresh your banks:', e instanceof Error ? e.message : e);
+      return { failed: [] };
+    } finally {
+      refreshing = null;
+    }
+  })();
+  return refreshing;
 }
 
 /** Start once at app launch. Resolves the first auth state before the app renders. */

@@ -27,13 +27,24 @@ export function useNetWorth() {
   }, [accounts]);
 }
 
-export function transactionsFor(a: Account): Transaction[] {
-  return demoTransactions(a);
+/**
+ * An account's transactions, newest first. Plaid accounts use the synced ones from the store
+ * (pass them in); demo bank accounts generate sample history.
+ */
+export function transactionsFor(a: Account, synced: Transaction[]): Transaction[] {
+  return a.id.startsWith('plaid_') ? synced.filter((t) => t.accountId === a.id) : demoTransactions(a);
+}
+
+/** One account's transactions, kept up to date as the store changes. */
+export function useTransactions(a: Account | undefined): Transaction[] {
+  const synced = useStore((s) => s.transactions);
+  return useMemo(() => (a ? transactionsFor(a, synced) : []), [a, synced]);
 }
 
 /** Card and cash spending this calendar month, by category (excludes payments, rent, transfers in). */
 export function useMonthSpending() {
   const accounts = useStore((s) => s.accounts);
+  const synced = useStore((s) => s.transactions);
   return useMemo(() => {
     const start = new Date();
     start.setDate(1);
@@ -43,14 +54,14 @@ export function useMonthSpending() {
     let total = 0;
     for (const a of accounts) {
       if (a.type !== 'credit' && a.type !== 'checking') continue;
-      for (const t of transactionsFor(a)) {
-        if (t.date < startIso || t.amountCents <= 0) continue;
-        if (t.merchant === 'Card payment' || t.merchant === 'Venmo') continue;
+      for (const t of transactionsFor(a, synced)) {
+        if (t.date < startIso || t.amountCents <= 0 || t.transfer) continue;
+        if (t.merchant === 'Card payment' || t.merchant === 'Venmo') continue; // demo bank stand-ins for transfers
         by.set(t.category, (by.get(t.category) ?? 0) + t.amountCents);
         total += t.amountCents;
       }
     }
     const rows = [...by.entries()].map(([category, cents]) => ({ category, cents })).sort((a, b) => b.cents - a.cents);
     return { total, rows, byCategory: by };
-  }, [accounts]);
+  }, [accounts, synced]);
 }

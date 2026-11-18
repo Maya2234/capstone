@@ -2,7 +2,7 @@
 // Row level security scopes every query to the caller, but writes still set user_id.
 
 import type { CategoryId } from '@/data/categories';
-import type { Account, Budget, Prefs, Profile, Purchase, WalletCard } from '@/data/types';
+import type { Account, Budget, Prefs, Profile, Purchase, Transaction, WalletCard } from '@/data/types';
 import { supabase } from '@/lib/supabase';
 
 export type UserData = {
@@ -12,6 +12,7 @@ export type UserData = {
   cards: WalletCard[];
   budgets: Budget[];
   purchases: Purchase[];
+  transactions: Transaction[];
 };
 
 // Row shapes -----------------------------------------------------------------------------
@@ -100,6 +101,17 @@ const toPurchase = (r: any): Purchase => ({
   status: r.status,
 });
 
+const toTransaction = (r: any): Transaction => ({
+  id: r.id,
+  accountId: r.account_id,
+  date: r.date,
+  merchant: r.merchant,
+  category: r.category,
+  amountCents: Number(r.amount_cents),
+  ...(r.pending ? { pending: true } : {}),
+  ...(r.transfer ? { transfer: true } : {}),
+});
+
 function check<T extends { error: { message: string } | null }>(res: T): T {
   if (res.error) throw new Error(res.error.message);
   return res;
@@ -119,6 +131,11 @@ export async function loadUserData(userId: string): Promise<UserData | null> {
 
   const p = profile.data;
   if (!p) return null;
+  // Missing table (003_transactions.sql not run yet) shouldn't lock anyone out.
+  const transactions = await loadTransactions().catch((e) => {
+    console.warn('[CardMaxx] Couldn’t load transactions:', e instanceof Error ? e.message : e);
+    return [];
+  });
   return {
     profile: { name: p.name, username: p.username, email: p.email, phone: p.phone, ...(p.photo_uri ? { photoUri: p.photo_uri } : {}) },
     prefs: p.prefs ?? {},
@@ -126,7 +143,22 @@ export async function loadUserData(userId: string): Promise<UserData | null> {
     cards: (cards.data ?? []).map(toCard),
     budgets: (budgets.data ?? []).map((b: { category: string; limit_cents: number }) => ({ category: b.category as CategoryId, limitCents: Number(b.limit_cents) })),
     purchases: (purchases.data ?? []).map(toPurchase),
+    transactions,
   };
+}
+
+/**
+ * Bank transactions (written by the server's Plaid sync; the app only reads them), newest first.
+ * Supabase returns at most 1,000 rows per request, so this pages through.
+ */
+export async function loadTransactions(): Promise<Transaction[]> {
+  const out: Transaction[] = [];
+  const PAGE = 1000;
+  for (let from = 0; ; from += PAGE) {
+    const { data } = check(await supabase.from('transactions').select('*').order('date', { ascending: false }).range(from, from + PAGE - 1));
+    out.push(...(data ?? []).map(toTransaction));
+    if (!data || data.length < PAGE) return out;
+  }
 }
 
 /** Save a brand-new user's starter data. The profile goes last, so a half-finished setup retries. */

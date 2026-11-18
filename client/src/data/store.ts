@@ -4,11 +4,11 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { db, type UserData } from '@/services/db';
+import { isPlaidAccount, unlinkPlaid } from '@/services/plaid';
 
 import type { CategoryId } from './categories';
-import { demoAccountsFor, demoPurchases, STARTING_INSTITUTIONS, walletCardFromAccount } from './demo';
-import { pickForPurchase } from './rewards';
-import type { Account, Budget, Prefs, Profile, Purchase, WalletCard } from './types';
+import { walletCardFromAccount } from './demo';
+import type { Account, Budget, Prefs, Profile, Purchase, Transaction, WalletCard } from './types';
 
 export type Session = { userId: string; email: string; method: 'google' | 'email' } | null;
 
@@ -19,6 +19,8 @@ type Data = {
   cards: WalletCard[];
   budgets: Budget[];
   purchases: Purchase[];
+  /** Bank transactions from Plaid (demo banks generate theirs in demo.ts instead). */
+  transactions: Transaction[];
 };
 
 type State = Data & {
@@ -36,7 +38,13 @@ type Actions = {
   updateProfile: (p: Partial<Profile>) => void;
   setPref: <K extends keyof Prefs>(k: K, v: Prefs[K]) => void;
   linkAccounts: (accounts: Account[]) => void;
-  unlinkInstitution: (institutionId: string) => void;
+  /** Fresh balances from a Plaid refresh: updates known accounts and adds any new ones. */
+  refreshAccounts: (accounts: Account[]) => void;
+  setTransactions: (transactions: Transaction[]) => void;
+  /** Disconnects a bank. Plaid banks are revoked at Plaid first, so this can fail. */
+  unlinkInstitution: (institutionId: string) => Promise<void>;
+  /** Says which catalog card a linked credit account is, and puts it in the Wallet. */
+  assignProduct: (accountId: string, productId: string, nickname?: string) => void;
   addCard: (c: Omit<WalletCard, 'id' | 'addedAt' | 'enabled'>) => void;
   removeCard: (id: string) => void;
   setCardEnabled: (id: string, enabled: boolean) => void;
@@ -44,22 +52,12 @@ type Actions = {
   removeBudget: (category: CategoryId) => void;
 };
 
-const DEFAULT_BUDGETS: Budget[] = [
-  { category: 'dining', limitCents: 45000 },
-  { category: 'groceries', limitCents: 60000 },
-  { category: 'online_retail', limitCents: 35000 },
-  { category: 'entertainment', limitCents: 30000 },
-  { category: 'transit', limitCents: 15000 },
-];
-
 const emptyProfile: Profile = { name: '', username: '', email: '', phone: '' };
-export const DEFAULT_PREFS: Prefs = { showNetWorth: true, hideAmounts: false, cardSuggestions: true, appearance: 'system' };
-const emptyData: Data = { profile: emptyProfile, prefs: DEFAULT_PREFS, accounts: [], cards: [], budgets: [], purchases: [] };
+export const DEFAULT_PREFS: Prefs = { showNetWorth: true, cardSuggestions: true, appearance: 'system', budgetPromptDismissed: false };
+const emptyData: Data = { profile: emptyProfile, prefs: DEFAULT_PREFS, accounts: [], cards: [], budgets: [], purchases: [], transactions: [] };
 
-/** A brand-new user: a few demo banks connected, cards in the wallet, some CardMaxx history. */
+/** A brand-new user: just a profile. Banks and cards come from linking them; budgets from the user setting them. */
 export function starterData(email: string, name?: string): Data {
-  const accounts = STARTING_INSTITUTIONS.flatMap((id) => demoAccountsFor(id));
-  const cards = accounts.filter((a) => a.type === 'credit' && a.productId).map(walletCardFromAccount);
   const display = name || email.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
   // Same rule Settings enforces: 3–24 of a-z, 0-9, . or _
   const base = email.split('@')[0].toLowerCase().replace(/[^a-z0-9_.]/g, '_').slice(0, 24);
@@ -67,10 +65,11 @@ export function starterData(email: string, name?: string): Data {
   return {
     profile: { ...emptyProfile, name: display, email, username },
     prefs: DEFAULT_PREFS,
-    accounts,
-    cards,
-    budgets: DEFAULT_BUDGETS,
-    purchases: demoPurchases(cards, pickForPurchase),
+    accounts: [],
+    cards: [],
+    budgets: [],
+    purchases: [],
+    transactions: [],
   };
 }
 
@@ -89,7 +88,12 @@ export const useStore = create<State & Actions>()(
         session: null,
         authReady: false,
 
-        setSignedIn: (session, data) => set({ session, ...data, prefs: { ...DEFAULT_PREFS, ...data.prefs } }),
+        setSignedIn: (session, data) => {
+          // Drop the retired "hide amounts" setting so saved prefs stop carrying it.
+          const { hideAmounts: _retired, ...prefs } = data.prefs as Partial<Prefs> & { hideAmounts?: boolean };
+          void _retired;
+          set({ session, ...data, prefs: { ...DEFAULT_PREFS, ...prefs } });
+        },
         setSignedOut: () => set({ session: null, ...emptyData, prefs: get().prefs }),
         setAuthReady: () => set({ authReady: true }),
 
@@ -114,14 +118,54 @@ export const useStore = create<State & Actions>()(
             await db.saveCards(uid, newCards);
           });
         },
-        unlinkInstitution: (institutionId) => {
+        refreshAccounts: (incoming) => {
+          const s = get();
+          const known = new Map(s.accounts.map((a) => [a.id, a]));
+          // Keep what the user chose (which card it is) and when it was linked; take everything else fresh.
+          const updated = incoming
+            .filter((a) => known.has(a.id))
+            .map((a) => {
+              const old = known.get(a.id)!;
+              return { ...a, productId: old.productId ?? a.productId, linkedAt: old.linkedAt };
+            });
+          const byId = new Map(updated.map((a) => [a.id, a]));
+          set({ accounts: s.accounts.map((a) => byId.get(a.id) ?? a) });
+          remote((uid) => db.saveAccounts(uid, updated));
+          get().linkAccounts(incoming.filter((a) => !known.has(a.id)));
+        },
+        setTransactions: (transactions) => set({ transactions }),
+
+        unlinkInstitution: async (institutionId) => {
+          if (isPlaidAccount(institutionId)) await unlinkPlaid(institutionId);
           const s = get();
           const gone = new Set(s.accounts.filter((a) => a.institutionId === institutionId).map((a) => a.id));
           const goneCards = s.cards.filter((c) => c.accountId && gone.has(c.accountId)).map((c) => c.id);
-          set({ accounts: s.accounts.filter((a) => !gone.has(a.id)), cards: s.cards.filter((c) => !goneCards.includes(c.id)) });
+          set({
+            accounts: s.accounts.filter((a) => !gone.has(a.id)),
+            cards: s.cards.filter((c) => !goneCards.includes(c.id)),
+            transactions: s.transactions.filter((t) => !gone.has(t.accountId)),
+          });
           remote(async () => {
             await db.deleteCards(goneCards);
             await db.deleteAccounts([...gone]);
+          });
+        },
+        assignProduct: (accountId, productId, nickname) => {
+          const s = get();
+          const account = s.accounts.find((a) => a.id === accountId);
+          if (!account) return;
+          const next = { ...account, productId };
+          const existing = s.cards.find((c) => c.accountId === accountId);
+          const card: WalletCard = existing
+            ? { ...existing, productId, ...(nickname ? { nickname } : {}) }
+            : { ...walletCardFromAccount(next), ...(nickname ? { nickname } : {}) };
+          set({
+            accounts: s.accounts.map((a) => (a.id === accountId ? next : a)),
+            cards: existing ? s.cards.map((c) => (c.id === card.id ? card : c)) : [...s.cards, card],
+          });
+          remote(async (uid) => {
+            await db.saveAccounts(uid, [next]);
+            await db.saveCards(uid, [card]);
           });
         },
 
@@ -159,8 +203,9 @@ export const useStore = create<State & Actions>()(
     },
     {
       name: 'cardmaxx',
-      // v2: data now lives in Supabase. This is a cache, and the session comes from Supabase Auth.
-      version: 2,
+      // Data lives in Supabase; this is a device cache, and the session comes from Supabase Auth.
+      // v3: adds bank transactions.
+      version: 3,
       migrate: () => ({ ...emptyData }) as State & Actions,
       partialize: ({ session, authReady, ...rest }) => {
         void session;

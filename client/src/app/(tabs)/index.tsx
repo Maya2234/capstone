@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { Eye, EyeOff, Gift, Landmark, Plus, Sparkles, Target } from 'lucide-react-native';
+import { Gift, Landmark, Plus, Sparkles, Target, X } from 'lucide-react-native';
 import { Fragment } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
@@ -14,7 +14,7 @@ import { greeting, monthName, pct } from '@/lib/format';
 import { useTheme, useWide } from '@/theme/theme';
 import { palette, space } from '@/theme/tokens';
 import { CategoryIcon, Divider, EmptyState, InstitutionBadge, Money, Row, SectionHeader } from '@/ui/bits';
-import { Button } from '@/ui/Button';
+import { Button, IconButton } from '@/ui/Button';
 import { Donut, ProgressBar } from '@/ui/charts';
 import { Screen } from '@/ui/Screen';
 import { Surface } from '@/ui/Surface';
@@ -60,9 +60,6 @@ export default function Home() {
 
 function NetWorth() {
   const { net, assets, debts } = useNetWorth();
-  const hidden = useStore((s) => s.prefs.hideAmounts);
-  const setPref = useStore((s) => s.setPref);
-  const Eyecon = hidden ? EyeOff : Eye;
   return (
     <View style={styles.hero}>
       <LinearGradient colors={[palette.indigo, palette.violet, palette.orchid]} locations={[0, 0.62, 1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
@@ -72,16 +69,7 @@ function NetWorth() {
         <Path d="M90 90 L0 90 A90 90 0 0 1 90 0 Z" fill="#fff" opacity={0.6} />
         <Path d="M90 90 L90 180 A90 90 0 0 0 180 90 Z" fill="#fff" opacity={0.45} />
       </Svg>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <Text variant="smallStrong" tone="inverse" style={{ opacity: 0.9 }}>Net worth</Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={hidden ? 'Show amounts' : 'Hide amounts'}
-          onPress={() => setPref('hideAmounts', !hidden)}
-          hitSlop={10}>
-          <Eyecon size={16} color="#fff" style={{ opacity: 0.9 }} />
-        </Pressable>
-      </View>
+      <Text variant="smallStrong" tone="inverse" style={{ opacity: 0.9 }}>Net worth</Text>
       <Money cents={net} variant="hero" tone="inverse" style={{ marginTop: 4 }} />
       <View style={{ flexDirection: 'row', gap: space.xl, marginTop: space.lg }}>
         <View>
@@ -229,22 +217,36 @@ function Spending() {
 function Budgets() {
   const t = useTheme();
   const budgets = useStore((s) => s.budgets);
+  const dismissed = useStore((s) => s.prefs.budgetPromptDismissed);
+  const setPref = useStore((s) => s.setPref);
   const { byCategory } = useMonthSpending();
+  // No budgets until the user sets some. Until then, offer to; once they say "Not now", stay out of the way.
+  if (budgets.length === 0 && dismissed) return null;
+  if (budgets.length === 0) {
+    return (
+      <Surface>
+        <View style={{ position: 'absolute', top: space.sm, right: space.sm, zIndex: 1 }}>
+          <IconButton icon={X} label="Dismiss budgets prompt" size={36} onPress={() => setPref('budgetPromptDismissed', true)} />
+        </View>
+        <EmptyState
+          icon={Target}
+          title="Set monthly budgets?"
+          body="Pick the categories you want to keep an eye on and we’ll track your spending against them. You can do this any time from Settings."
+          action={
+            <View style={{ flexDirection: 'row', gap: space.sm, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <Button label="Set budgets" onPress={() => router.push('/budgets')} />
+              <Button label="Not now" variant="ghost" onPress={() => setPref('budgetPromptDismissed', true)} />
+            </View>
+          }
+        />
+      </Surface>
+    );
+  }
   return (
     <View style={{ gap: space.md }}>
-      <SectionHeader
-        title="Budgets"
-        action={<Button label={budgets.length ? 'Edit' : 'Set up'} size="sm" variant="ghost" onPress={() => router.push('/budgets')} />}
-      />
+      <SectionHeader title="Budgets" action={<Button label="Edit" size="sm" variant="ghost" onPress={() => router.push('/budgets')} />} />
       <Surface style={{ gap: space.lg }}>
-        {budgets.length === 0 ? (
-          <EmptyState
-            icon={Target}
-            title="Give your spending a plan"
-            action={<Button label="Create a budget" onPress={() => router.push('/budgets')} />}
-          />
-        ) : (
-          budgets.map((b) => {
+        {budgets.map((b) => {
             const spent = byCategory.get(b.category) ?? 0;
             const ratio = spent / b.limitCents;
             const over = spent > b.limitCents;
@@ -267,8 +269,7 @@ function Budgets() {
                 </View>
               </View>
             );
-          })
-        )}
+          })}
       </Surface>
     </View>
   );

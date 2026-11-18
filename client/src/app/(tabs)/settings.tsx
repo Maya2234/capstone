@@ -1,4 +1,5 @@
 import * as ImagePicker from 'expo-image-picker';
+import { router } from 'expo-router';
 import { Camera, KeyRound, LogOut } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
@@ -98,6 +99,7 @@ function Profile() {
 function Preferences() {
   const prefs = useStore((s) => s.prefs);
   const setPref = useStore((s) => s.setPref);
+  const budgetCount = useStore((s) => s.budgets.length);
   const toggle = (k: 'showNetWorth' | 'cardSuggestions', label: string) => (
     <Row title={label} right={<Switch value={prefs[k]} onChange={(v) => setPref(k, v)} label={label} />} />
   );
@@ -108,6 +110,13 @@ function Preferences() {
         {toggle('showNetWorth', 'Show net worth on Home')}
         <Divider inset={12} />
         {toggle('cardSuggestions', 'Suggest cards that earn more')}
+        <Divider inset={12} />
+        <Row
+          title="Monthly budgets"
+          subtitle={budgetCount ? `${budgetCount} ${budgetCount === 1 ? 'category' : 'categories'}` : 'Not set'}
+          onPress={() => router.push('/budgets')}
+          chevron
+        />
         <Divider inset={12} />
         <View style={{ padding: space.md, gap: space.md }}>
           <Text variant="bodyStrong">Appearance</Text>

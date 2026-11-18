@@ -1,10 +1,10 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Gift, Search, Unlink } from 'lucide-react-native';
+import { CreditCard, Gift, Search, Unlink } from 'lucide-react-native';
 import { Fragment, useMemo, useState } from 'react';
 import { View } from 'react-native';
 
 import { institution } from '@/data/demo';
-import { transactionsFor } from '@/data/derive';
+import { useTransactions } from '@/data/derive';
 import { useStore } from '@/data/store';
 import { confirm } from '@/lib/confirm';
 import { dayLabel, money } from '@/lib/format';
@@ -28,8 +28,9 @@ export default function AccountDetail() {
   const toast = useToast();
   const wide = useWide();
   const [q, setQ] = useState('');
+  const [busy, setBusy] = useState(false);
 
-  const txns = useMemo(() => (account ? transactionsFor(account) : []), [account]);
+  const txns = useTransactions(account);
   const shown = useMemo(() => {
     const s = q.trim().toLowerCase();
     return s ? txns.filter((x) => x.merchant.toLowerCase().includes(s)) : txns;
@@ -48,9 +49,15 @@ export default function AccountDetail() {
   async function disconnect() {
     const ok = await confirm(`Disconnect ${inst.name}?`, `This removes every ${inst.name} account and its cards from CardMaxx. You can link it again any time.`, 'Disconnect');
     if (!ok) return;
-    unlink(inst.id);
-    toast(`${inst.name} disconnected`);
-    router.replace('/');
+    setBusy(true);
+    try {
+      await unlink(inst.id);
+      toast(`${inst.name} disconnected`);
+      router.replace('/');
+    } catch (e) {
+      toast(e instanceof Error ? e.message : `Couldn’t disconnect ${inst.name}. Try again.`, 'error');
+      setBusy(false);
+    }
   }
 
   const groups: { day: string; items: typeof shown }[] = [];
@@ -85,6 +92,12 @@ export default function AccountDetail() {
         ) : null}
         {account.productId && (
           <Button label="Card benefits" icon={Gift} variant="soft" onPress={() => router.push({ pathname: '/card/[id]', params: { id: account.productId! } })} />
+        )}
+        {isCredit && !account.productId && (
+          <View style={{ gap: 6 }}>
+            <Text variant="small" tone="muted">We couldn’t tell which card this is from the bank’s name for it. Pick it so CardMaxx can use its rewards.</Text>
+            <Button label="Choose which card this is" icon={CreditCard} variant="soft" onPress={() => router.push({ pathname: '/add-card', params: { account: account.id } })} />
+          </View>
         )}
       </Surface>
 
@@ -122,7 +135,7 @@ export default function AccountDetail() {
         )}
       </View>
 
-      <Button label={`Disconnect ${inst.name}`} icon={Unlink} variant="danger" onPress={disconnect} />
+      <Button label={`Disconnect ${inst.name}`} icon={Unlink} variant="danger" onPress={disconnect} loading={busy} disabled={busy} />
     </Screen>
   );
 }

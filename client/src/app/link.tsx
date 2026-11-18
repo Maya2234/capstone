@@ -1,15 +1,16 @@
 import { router } from 'expo-router';
-import { Check, Landmark, Lock, Search } from 'lucide-react-native';
+import { Check, Landmark, Lock, MonitorSmartphone, Search } from 'lucide-react-native';
 import { Fragment, useCallback, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 import { DEMO_ACCOUNTS, demoAccountsFor, INSTITUTIONS } from '@/data/demo';
 import { useStore } from '@/data/store';
-import { exchangePublicToken } from '@/services/plaid';
+import { refreshBanks } from '@/data/sync';
+import { exchangePublicToken, PLAID_ENV } from '@/services/plaid';
 import { usePlaidConnect } from '@/services/plaidLink';
 import { useTheme } from '@/theme/theme';
 import { space } from '@/theme/tokens';
-import { Badge, Divider, InstitutionBadge, Row } from '@/ui/bits';
+import { Badge, Divider, EmptyState, InstitutionBadge, Row } from '@/ui/bits';
 import { Button } from '@/ui/Button';
 import { Input } from '@/ui/controls';
 import { Sheet } from '@/ui/Sheet';
@@ -17,10 +18,13 @@ import { Surface } from '@/ui/Surface';
 import { Text } from '@/ui/Text';
 import { useToast } from '@/ui/Toast';
 
+/** Sample banks with made-up accounts, for demos. Off unless EXPO_PUBLIC_DEMO_BANKS=true. */
+const DEMO_BANKS = process.env.EXPO_PUBLIC_DEMO_BANKS === 'true';
+
 /**
- * Bank connection. On the website, "Continue with Plaid" opens Plaid Link (Sandbox: any bank,
- * user_good / pass_good). The demo banks below stay for trying the app, and for phones
- * until Plaid's phone library is added (PLAID.md, step 4).
+ * Bank connection. On the website, "Continue with Plaid" opens Plaid Link: test banks when
+ * EXPO_PUBLIC_PLAID_ENV is sandbox (user_good / pass_good), real ones when it's production.
+ * Phones can't open Plaid until its phone library is added (PLAID.md, step 4).
  */
 export default function LinkAccount() {
   const t = useTheme();
@@ -40,6 +44,7 @@ export default function LinkAccount() {
       try {
         const { institution, accounts: added } = await exchangePublicToken(publicToken);
         linkAccounts(added);
+        void refreshBanks(); // loads the transactions the server just pulled
         toast(`${institution} connected · ${added.length} account${added.length === 1 ? '' : 's'} added`);
         if (router.canGoBack()) router.back();
         else router.replace('/');
@@ -82,47 +87,63 @@ export default function LinkAccount() {
             disabled={!!busy}
             full
           />
-          <Text variant="small" tone="subtle" style={{ textAlign: 'center' }}>Test mode: pick any bank and sign in with user_good / pass_good</Text>
+          {PLAID_ENV === 'sandbox' && (
+            <Text variant="small" tone="subtle" style={{ textAlign: 'center' }}>Test mode: pick any bank and sign in with user_good / pass_good</Text>
+          )}
         </View>
       )}
 
-      <View style={{ gap: space.md }}>
-        {plaid.available && <Text variant="smallStrong" tone="muted">Or try a demo bank</Text>}
-        <Input label="Find your bank" placeholder="Search" value={q} onChangeText={setQ} autoFocus={!plaid.available} />
-      </View>
-      <Surface padded={false} style={{ padding: space.sm }}>
-        {list.length === 0 && (
-          <View style={{ padding: space.lg, alignItems: 'center', gap: 6 }}>
-            <Search size={20} color={t.textSubtle} />
-            <Text tone="muted">No banks match “{q}”</Text>
+      {!plaid.available && !DEMO_BANKS && (
+        <Surface>
+          <EmptyState
+            icon={MonitorSmartphone}
+            title="Link banks on the website for now"
+            body="Bank linking on phones is coming soon. Sign in to CardMaxx on the web to connect, and your accounts show up here too."
+          />
+        </Surface>
+      )}
+
+      {DEMO_BANKS && (
+        <>
+          <View style={{ gap: space.md }}>
+            {plaid.available && <Text variant="smallStrong" tone="muted">Or try a demo bank</Text>}
+            <Input label="Find your bank" placeholder="Search" value={q} onChangeText={setQ} autoFocus={!plaid.available} />
           </View>
-        )}
-        {list.map((i, idx) => {
-          const done = linked.has(i.id);
-          return (
-            <Fragment key={i.id}>
-              {idx > 0 && <Divider inset={64} />}
-              <Row
-                onPress={done || busy ? undefined : () => connectDemo(i.id, i.name)}
-                left={<InstitutionBadge name={i.name} color={i.color} />}
-                title={i.name}
-                right={
-                  busy === i.id ? <ActivityIndicator color={t.primary} /> : done ? (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                      <Check size={16} color={t.success} />
-                      <Text variant="smallStrong" tone="success">Linked</Text>
-                    </View>
-                  ) : null
-                }
-                chevron={!done && busy !== i.id}
-              />
-            </Fragment>
-          );
-        })}
-      </Surface>
-      <View style={{ alignItems: 'center' }}>
-        <Badge label="Demo banks · sample accounts" tone="neutral" />
-      </View>
+          <Surface padded={false} style={{ padding: space.sm }}>
+            {list.length === 0 && (
+              <View style={{ padding: space.lg, alignItems: 'center', gap: 6 }}>
+                <Search size={20} color={t.textSubtle} />
+                <Text tone="muted">No banks match “{q}”</Text>
+              </View>
+            )}
+            {list.map((i, idx) => {
+              const done = linked.has(i.id);
+              return (
+                <Fragment key={i.id}>
+                  {idx > 0 && <Divider inset={64} />}
+                  <Row
+                    onPress={done || busy ? undefined : () => connectDemo(i.id, i.name)}
+                    left={<InstitutionBadge name={i.name} color={i.color} />}
+                    title={i.name}
+                    right={
+                      busy === i.id ? <ActivityIndicator color={t.primary} /> : done ? (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                          <Check size={16} color={t.success} />
+                          <Text variant="smallStrong" tone="success">Linked</Text>
+                        </View>
+                      ) : null
+                    }
+                    chevron={!done && busy !== i.id}
+                  />
+                </Fragment>
+              );
+            })}
+          </Surface>
+          <View style={{ alignItems: 'center' }}>
+            <Badge label="Demo banks · sample accounts" tone="neutral" />
+          </View>
+        </>
+      )}
     </Sheet>
   );
 }

@@ -36,6 +36,31 @@ export function shortName(p: Product) {
   return n.replace(/ Card$/, '').replace(/^Card$/, p.name);
 }
 
+// Matching a bank's account name to the catalog ------------------------------------------
+
+const STOP = new Set(['the', 'card', 'from', 'by', 'credit', 'visa', 'mastercard', 'signature', 'world', 'elite']);
+const words = (s: string) =>
+  s.toLowerCase().replace(/[®™℠]/g, '').replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter((w) => w && !STOP.has(w));
+
+/**
+ * The catalog card a linked credit account most likely is, from what the bank calls it
+ * ("Sapphire Preferred", "CHASE SAPPHIRE PREFERRED", "Platinum Card®" at American Express).
+ * Every word of the card's short name must appear; the most specific match wins.
+ * Returns undefined when nothing fits, and the user picks the card by hand.
+ */
+export function matchProduct(...names: (string | null | undefined)[]): string | undefined {
+  const have = new Set(names.flatMap((n) => (n ? words(n) : [])));
+  let best: { id: string; score: number } | undefined;
+  for (const p of PRODUCTS) {
+    const need = words(shortName(p));
+    if (!need.length || !need.every((w) => have.has(w))) continue;
+    const issuerHit = words(p.issuer).some((w) => have.has(w)) ? 0.5 : 0;
+    const score = need.length + issuerHit;
+    if (!best || score > best.score) best = { id: p.id, score };
+  }
+  return best?.id;
+}
+
 /** Earn rate for a plain (non-portal, non-merchant-specific) category. */
 export function earnRate(p: Product, category: CategoryId): number {
   let best = p.baseRate;

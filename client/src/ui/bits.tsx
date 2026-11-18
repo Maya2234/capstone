@@ -4,19 +4,16 @@ import type { ReactNode } from 'react';
 import { Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { CATEGORIES, type CategoryId } from '@/data/categories';
-import { useStore } from '@/data/store';
 import { money } from '@/lib/format';
 import { useTheme } from '@/theme/theme';
 import { radius, space } from '@/theme/tokens';
 
 import { Text, type Variant } from './Text';
 
-/** Money that respects the "hide amounts" eye toggle. */
 export function Money({ cents, variant = 'amount', whole, sign, tone, style }: { cents: number; variant?: Variant; whole?: boolean; sign?: boolean; tone?: 'text' | 'muted' | 'success' | 'danger' | 'inverse'; style?: object }) {
-  const hidden = useStore((s) => s.prefs.hideAmounts);
   return (
     <Text variant={variant} tone={tone} style={style}>
-      {hidden ? '$•••••' : money(cents, { whole, sign })}
+      {money(cents, { whole, sign })}
     </Text>
   );
 }

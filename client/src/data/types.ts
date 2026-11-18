@@ -25,6 +25,7 @@ export type Transaction = {
   category: CategoryId;
   amountCents: number; // positive = money out, negative = money in
   pending?: boolean;
+  transfer?: boolean; // card payments, transfers and income: not spending
 };
 
 /** A card CardMaxx can pay with: either a linked credit account or one added by hand. */
@@ -62,7 +63,8 @@ export type Profile = {
 
 export type Prefs = {
   showNetWorth: boolean;
-  hideAmounts: boolean;
   cardSuggestions: boolean;
   appearance: 'system' | 'light' | 'dark';
+  /** The user closed the "set your budgets" prompt on Home. Budgets stay reachable from Settings. */
+  budgetPromptDismissed: boolean;
 };
