@@ -9,8 +9,8 @@ import { bestCard, suggestions } from '@/data/rewards';
 import { useStore } from '@/data/store';
 import type { WalletCard } from '@/data/types';
 import { money, rate, shortDate } from '@/lib/format';
-import { useWide } from '@/theme/theme';
-import { space } from '@/theme/tokens';
+import { useTheme, useWide } from '@/theme/theme';
+import { radius, space } from '@/theme/tokens';
 import { Badge, CategoryIcon, Divider, EmptyState, Row, SectionHeader } from '@/ui/bits';
 import { Button } from '@/ui/Button';
 import { CardArt } from '@/ui/CardArt';
@@ -27,6 +27,7 @@ export default function Wallet() {
   if (!cards.length) {
     return (
       <Screen title="Wallet" action={add}>
+        <SetupPrompt />
         <Surface>
           <EmptyState
             icon={CreditCard}
@@ -41,19 +42,47 @@ export default function Wallet() {
 
   return (
     <Screen title="Wallet" action={add}>
-      <Cards cards={cards} />
+      <SetupPrompt />
+      <View style={{ marginTop: space.lg }}>
+        <Cards cards={cards} />
+      </View>
       {wide ? (
-        <View style={{ flexDirection: 'row', gap: space.xl, alignItems: 'flex-start' }}>
+        <View style={{ flexDirection: 'row', gap: space.xxxl, alignItems: 'flex-start', marginTop: space.xxl }}>
           <View style={{ flex: 1 }}><BestByCategory cards={cards} /></View>
           <View style={{ flex: 1 }}><Suggestions cards={cards} /></View>
         </View>
       ) : (
         <>
-          <BestByCategory cards={cards} />
-          <Suggestions cards={cards} />
+          <View style={{ marginTop: space.xl }}><BestByCategory cards={cards} /></View>
+          <View style={{ marginTop: space.lg }}><Suggestions cards={cards} /></View>
         </>
       )}
     </Screen>
+  );
+}
+
+/** Linked credit cards the app couldn't recognize, waiting to be picked. */
+function SetupPrompt() {
+  const t = useTheme();
+  const waiting = useStore((s) => s.accounts.filter((a) => a.type === 'credit' && !s.cards.some((c) => c.accountId === a.id)).length);
+  if (!waiting) return null;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={() => router.push('/setup-cards')}
+      style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
+        { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.lg, borderRadius: radius.xl, backgroundColor: t.primarySoft },
+        (pressed || hovered) && { opacity: 0.85 },
+      ]}>
+      <CreditCard size={22} color={t.primarySoftText} />
+      <View style={{ flex: 1, gap: 2 }}>
+        <Text variant="bodyStrong" style={{ color: t.primarySoftText }}>
+          {waiting} linked card{waiting === 1 ? '' : 's'} not in your Wallet yet
+        </Text>
+        <Text variant="small" style={{ color: t.primarySoftText, opacity: 0.85 }}>Tell us which card {waiting === 1 ? 'it is' : 'each one is'} so CardMaxx can use {waiting === 1 ? 'it' : 'them'}.</Text>
+      </View>
+      <Text variant="smallStrong" style={{ color: t.primarySoftText }}>Set up</Text>
+    </Pressable>
   );
 }
 

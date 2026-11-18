@@ -9,12 +9,14 @@ import { radius, space } from '@/theme/tokens';
 
 import { IconButton } from './Button';
 import { Text } from './Text';
+import { usePageShown } from './usePageShown';
 
 /** Layout for modal routes: title + close, scrolling body, optional pinned footer. */
 export function Sheet({ title, children, footer }: { title: string; children: ReactNode; footer?: ReactNode }) {
   const t = useTheme();
   const wide = useWide();
   const insets = useSafeAreaInsets();
+  usePageShown();
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, backgroundColor: wide ? t.overlay : t.bg }}>

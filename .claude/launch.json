@@ -9,6 +9,12 @@
         "8082"
       ],
       "port": 8082
+    },
+    {
+      "name": "cardmaxx-prod",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "cd client && npx expo serve --port 8090"],
+      "port": 8090
     }
   ]
 }

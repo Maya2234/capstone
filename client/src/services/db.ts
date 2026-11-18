@@ -2,7 +2,7 @@
 // Row level security scopes every query to the caller, but writes still set user_id.
 
 import type { CategoryId } from '@/data/categories';
-import type { Account, Budget, Prefs, Profile, Purchase, Transaction, WalletCard } from '@/data/types';
+import type { Account, Budget, Prefs, Profile, Purchase, SpendCategory, Transaction, WalletCard } from '@/data/types';
 import { supabase } from '@/lib/supabase';
 
 export type UserData = {
@@ -190,5 +190,5 @@ export const db = {
 
   saveBudget: async (userId: string, b: Budget) =>
     check(await supabase.from('budgets').upsert({ user_id: userId, category: b.category, limit_cents: b.limitCents })),
-  deleteBudget: async (category: CategoryId) => check(await supabase.from('budgets').delete().eq('category', category)),
+  deleteBudget: async (category: SpendCategory) => check(await supabase.from('budgets').delete().eq('category', category)),
 };

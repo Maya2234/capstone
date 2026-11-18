@@ -9,6 +9,7 @@ import { MAX_WIDTH, space } from '@/theme/tokens';
 
 import { IconButton } from './Button';
 import { Text } from './Text';
+import { usePageShown } from './usePageShown';
 
 type Props = {
   children: ReactNode;
@@ -27,6 +28,7 @@ export function Screen({ children, title, action, back, inShell = true, maxWidth
   const t = useTheme();
   const wide = useWide();
   const insets = useSafeAreaInsets();
+  usePageShown();
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
   return (
     <ScrollView

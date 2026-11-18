@@ -6,12 +6,14 @@ import type { User } from '@supabase/supabase-js';
 import { router } from 'expo-router';
 
 import { supabase } from '@/lib/supabase';
+import { needsCode } from '@/services/auth';
 import { createUserData, loadTransactions, loadUserData } from '@/services/db';
 import { isPlaidAccount, refreshPlaid } from '@/services/plaid';
 
 import { DEFAULT_PREFS, starterData, useStore } from './store';
 
 let started = false;
+let recovering = false;
 let loadingFor: string | null = null;
 
 async function signedIn(user: User) {
@@ -20,6 +22,14 @@ async function signedIn(user: User) {
   if (store.session?.userId === user.id || loadingFor === user.id) return;
   loadingFor = user.id;
   try {
+    // Two-factor on, code not entered yet: show the code screen and load nothing. (The database
+    // would refuse anyway; see 005_require_two_factor.sql.) Entering the code fires this again.
+    if (await needsCode()) {
+      useStore.getState().setCodeNeeded(true);
+      return;
+    }
+    // From here until the first page draws, show the loading screen instead of the sign-in form.
+    useStore.getState().setEnteringApp(true);
     const email = user.email ?? '';
     let data = await loadUserData(user.id);
     if (!data) {
@@ -33,6 +43,7 @@ async function signedIn(user: User) {
     if (data.accounts.some((a) => isPlaidAccount(a.id))) void refreshBanks();
   } catch (e) {
     console.warn('[CardMaxx] Couldn’t load your data:', e instanceof Error ? e.message : e);
+    useStore.getState().setEnteringApp(false);
     // Without data the app can't show anything useful, so back out to the sign-in screen.
     await supabase.auth.signOut();
   } finally {
@@ -74,9 +85,14 @@ export function startAuthSync() {
     // Supabase warns against awaiting its own calls inside this callback, so defer the work.
     setTimeout(async () => {
       if (session?.user) await signedIn(session.user);
-      else if (useStore.getState().session) useStore.getState().setSignedOut();
+      else if (useStore.getState().session || useStore.getState().codeNeeded) useStore.getState().setSignedOut();
 
-      if (event === 'PASSWORD_RECOVERY') router.push('/new-password');
+      // A reset link signs you in. With two-factor on, the new-password screen waits until the code is in.
+      if (event === 'PASSWORD_RECOVERY') recovering = true;
+      if (recovering && useStore.getState().session) {
+        recovering = false;
+        router.push('/new-password');
+      }
       if (event === 'INITIAL_SESSION') useStore.getState().setAuthReady();
     }, 0);
   });

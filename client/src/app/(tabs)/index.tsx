@@ -1,21 +1,23 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { Gift, Landmark, Plus, Sparkles, Target, X } from 'lucide-react-native';
-import { Fragment } from 'react';
+import { ChevronRight, Landmark, Plus, Sparkles, Target, X } from 'lucide-react-native';
+import { Fragment, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
-import { CATEGORIES } from '@/data/categories';
+import { useSpendCategories } from '@/data/spendCategories';
 import { institution } from '@/data/demo';
-import { GROUPS, isLiability, useMonthSpending, useNetWorth } from '@/data/derive';
+import { GROUPS, isLiability, useAccountTitle, monthKey, periodKey, type PeriodKind, periodPhrase, useMonthSpending, useNetWorth } from '@/data/derive';
 import { useStore } from '@/data/store';
 import type { Account } from '@/data/types';
-import { greeting, monthName, pct } from '@/lib/format';
+import { greeting, money, pct } from '@/lib/format';
 import { useTheme, useWide } from '@/theme/theme';
 import { palette, space } from '@/theme/tokens';
 import { CategoryIcon, Divider, EmptyState, InstitutionBadge, Money, Row, SectionHeader } from '@/ui/bits';
 import { Button, IconButton } from '@/ui/Button';
 import { Donut, ProgressBar } from '@/ui/charts';
+import { Segmented } from '@/ui/controls';
+import { MonthPicker } from '@/ui/MonthPicker';
 import { Screen } from '@/ui/Screen';
 import { Surface } from '@/ui/Surface';
 import { Text } from '@/ui/Text';
@@ -78,7 +80,7 @@ function NetWorth() {
         </View>
         <View>
           <Text variant="small" tone="inverse" style={{ opacity: 0.8 }}>Debts</Text>
-          <Money cents={debts} variant="bodyStrong" tone="inverse" whole />
+          <Money cents={debts} variant="bodyStrong" tone="inverse" />
         </View>
       </View>
     </View>
@@ -130,18 +132,18 @@ function Accounts() {
   );
 }
 
+/** One account. Its page has the balance, transactions and, for a known card, its benefits. */
 function AccountRow({ a }: { a: Account }) {
-  const t = useTheme();
-  const wide = useWide();
   const inst = institution(a.institutionId, a.institutionName);
+  const title = useAccountTitle(a);
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
       <View style={{ flex: 1 }}>
         <Row
           onPress={() => router.push({ pathname: '/account/[id]', params: { id: a.id } })}
-          accessibilityLabel={`${a.name}, ${inst.name}`}
+          accessibilityLabel={`${title}, ${inst.name}`}
           left={<InstitutionBadge name={inst.name} color={inst.color} />}
-          title={a.name}
+          title={title}
           subtitle={`${inst.name} ••${a.mask}`}
           right={
             <View style={{ alignItems: 'flex-end' }}>
@@ -151,61 +153,63 @@ function AccountRow({ a }: { a: Account }) {
           }
         />
       </View>
-      {a.productId && (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`${a.name} benefits`}
-          onPress={() => router.push({ pathname: '/card/[id]', params: { id: a.productId! } })}
-          style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
-            styles.benefits,
-            !wide && { width: 36, paddingHorizontal: 0, justifyContent: 'center' },
-            { backgroundColor: pressed || hovered ? t.surfacePressed : t.primarySoft },
-          ]}>
-          <Gift size={15} color={t.primarySoftText} />
-          {wide && <Text variant="smallStrong" style={{ color: t.primarySoftText, fontSize: 12 }}>Benefits</Text>}
-        </Pressable>
-      )}
     </View>
   );
 }
 
 function Spending() {
-  const { total, rows } = useMonthSpending();
-  // "Everything else" is folded into Other so the chart never shows two grey slices.
-  const named = rows.filter((r) => r.category !== 'general');
-  const top = named.slice(0, 5);
+  const [kind, setKind] = useState<PeriodKind>('month');
+  const [month, setMonth] = useState(monthKey);
+  const { total, top, earliest } = useMonthSpending(month);
+  // Switching between months and weeks starts at the current one.
+  const switchKind = (k: PeriodKind) => {
+    setKind(k);
+    setMonth(periodKey(k));
+  };
   const rest = total - top.reduce((s, r) => s + r.cents, 0);
   const t = useTheme();
-  const data = [...top.map((r) => ({ value: r.cents, color: CATEGORIES[r.category].color })), ...(rest ? [{ value: rest, color: t.textSubtle }] : [])];
+  const { info } = useSpendCategories();
+  // Biggest first, Other included: it takes its place by amount, not always last.
+  const lines = [
+    ...top.map((r) => ({ slug: r.category as string, label: info(r.category).label, color: info(r.category).color, cents: r.cents, muted: false })),
+    ...(rest > 0 ? [{ slug: 'other', label: 'Other', color: t.textSubtle, cents: rest, muted: true }] : []),
+  ].sort((a, b) => b.cents - a.cents);
+  const data = lines.map((l) => ({ value: l.cents, color: l.color, label: l.label }));
+  const current = month === periodKey(kind);
   return (
     <View style={{ gap: space.md }}>
-      <SectionHeader title={`Spending in ${monthName()}`} />
-      <Surface>
+      <SectionHeader
+        title="Spending"
+        action={
+          <View style={{ width: 168 }}>
+            <Segmented<PeriodKind>
+              label="Show spending by"
+              value={kind}
+              onChange={switchKind}
+              options={[
+                { value: 'month', label: 'Month' },
+                { value: 'week', label: 'Week' },
+              ]}
+            />
+          </View>
+        }
+      />
+      <Surface style={{ gap: space.lg }}>
+        <View style={{ alignItems: 'center' }}>
+          <MonthPicker month={month} earliest={earliest} onChange={setMonth} />
+        </View>
         {total === 0 ? (
-          <EmptyState icon={Sparkles} title="No spending yet this month" />
+          <EmptyState icon={Sparkles} title={current ? `No spending yet this ${kind}` : `No spending ${periodPhrase(month)}`} />
         ) : (
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: space.xl }}>
-            <Donut data={data} size={156} stroke={20}>
+            <Donut data={data} size={156} stroke={20} format={(v) => money(v, { whole: true })}>
               <Text variant="small" tone="muted">Total</Text>
               <Money cents={total} variant="h2" whole />
             </Donut>
-            <View style={{ flex: 1, minWidth: 200, gap: space.md }}>
-              {top.map((r) => (
-                <View key={r.category} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: CATEGORIES[r.category].color }} />
-                  <Text variant="bodyStrong" style={{ flex: 1 }} numberOfLines={1}>{CATEGORIES[r.category].label}</Text>
-                  <Text variant="small" tone="subtle">{pct(r.cents / total)}</Text>
-                  <Money cents={r.cents} variant="amount" whole style={{ minWidth: 64, textAlign: 'right' }} />
-                </View>
+            <View style={{ flex: 1, minWidth: 200, gap: 2 }}>
+              {lines.map((l) => (
+                <CategoryLine key={l.slug} slug={l.slug} month={month} label={l.label} color={l.color} cents={l.cents} share={l.cents / total} muted={l.muted} />
               ))}
-              {rest > 0 && (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: t.textSubtle }} />
-                  <Text variant="bodyStrong" tone="muted" style={{ flex: 1 }}>Other</Text>
-                  <Text variant="small" tone="subtle">{pct(rest / total)}</Text>
-                  <Money cents={rest} variant="amount" whole style={{ minWidth: 64, textAlign: 'right' }} />
-                </View>
-              )}
             </View>
           </View>
         )}
@@ -214,9 +218,32 @@ function Spending() {
   );
 }
 
+/** One legend line under the spending chart. Opens that category's transactions. */
+function CategoryLine({ slug, month, label, color, cents, share, muted }: { slug: string; month: string; label: string; color: string; cents: number; share: number; muted?: boolean }) {
+  const t = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${label}: see transactions`}
+      onPress={() => router.push({ pathname: '/spending/[category]', params: { category: slug, month } })}
+      style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
+        { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 7, paddingHorizontal: 8, marginHorizontal: -8, borderRadius: 10 },
+        (pressed || hovered) && { backgroundColor: t.surfaceAlt },
+      ]}>
+      <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: color }} />
+      <Text variant="bodyStrong" tone={muted ? 'muted' : undefined} style={{ flex: 1 }} numberOfLines={1}>{label}</Text>
+      <Text variant="small" tone="subtle">{pct(share)}</Text>
+      <Money cents={cents} variant="amount" whole style={{ minWidth: 64, textAlign: 'right' }} />
+      <ChevronRight size={16} color={t.textSubtle} />
+    </Pressable>
+  );
+}
+
 function Budgets() {
   const t = useTheme();
-  const budgets = useStore((s) => s.budgets);
+  const { info, isActive } = useSpendCategories();
+  // A budget for a category the user turned off or deleted stays saved but isn't shown.
+  const budgets = useStore((s) => s.budgets).filter((b) => isActive(b.category));
   const dismissed = useStore((s) => s.prefs.budgetPromptDismissed);
   const setPref = useStore((s) => s.setPref);
   const { byCategory } = useMonthSpending();
@@ -250,13 +277,21 @@ function Budgets() {
             const spent = byCategory.get(b.category) ?? 0;
             const ratio = spent / b.limitCents;
             const over = spent > b.limitCents;
-            const color = over ? t.danger : ratio > 0.85 ? '#F0A53A' : CATEGORIES[b.category].color;
+            const color = over ? t.danger : ratio > 0.85 ? '#F0A53A' : info(b.category).color;
             return (
-              <View key={b.category} style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+              <Pressable
+                key={b.category}
+                accessibilityRole="button"
+                accessibilityLabel={`${info(b.category).label} budget: see transactions`}
+                onPress={() => router.push({ pathname: '/spending/[category]', params: { category: b.category } })}
+                style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
+                  { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: 8, margin: -8, borderRadius: 12 },
+                  (pressed || hovered) && { backgroundColor: t.surfaceAlt },
+                ]}>
                 <CategoryIcon category={b.category} size={38} />
                 <View style={{ flex: 1, gap: 6 }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
-                    <Text variant="bodyStrong" numberOfLines={1} style={{ flexShrink: 1 }}>{CATEGORIES[b.category].label}</Text>
+                    <Text variant="bodyStrong" numberOfLines={1} style={{ flexShrink: 1 }}>{info(b.category).label}</Text>
                     <Text variant="small" tone={over ? 'danger' : 'muted'}>
                       <Money cents={over ? spent - b.limitCents : b.limitCents - spent} variant="smallStrong" whole tone={over ? 'danger' : 'text'} />
                       {over ? ' over' : ' left'}
@@ -267,7 +302,7 @@ function Budgets() {
                     <Money cents={spent} variant="small" whole tone="muted" /> of <Money cents={b.limitCents} variant="small" whole tone="muted" />
                   </Text>
                 </View>
-              </View>
+              </Pressable>
             );
           })}
       </Surface>
@@ -277,6 +312,5 @@ function Budgets() {
 
 const styles = StyleSheet.create({
   hero: { borderRadius: 28, padding: space.xxl, overflow: 'hidden', minHeight: 190, justifyContent: 'center', boxShadow: '0px 18px 44px rgba(64,57,223,0.28)' },
-  benefits: { flexDirection: 'row', alignItems: 'center', gap: 5, height: 32, paddingHorizontal: 11, borderRadius: 16, marginRight: 8, marginLeft: 2 },
   groupHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: space.md, paddingBottom: 4, paddingTop: 4 },
 });

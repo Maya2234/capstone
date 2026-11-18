@@ -5,6 +5,7 @@ import { ActivityIndicator, View } from 'react-native';
 
 import { DEMO_ACCOUNTS, demoAccountsFor, INSTITUTIONS } from '@/data/demo';
 import { useStore } from '@/data/store';
+import type { Account } from '@/data/types';
 import { refreshBanks } from '@/data/sync';
 import { exchangePublicToken, PLAID_ENV } from '@/services/plaid';
 import { usePlaidConnect } from '@/services/plaidLink';
@@ -26,6 +27,17 @@ const DEMO_BANKS = process.env.EXPO_PUBLIC_DEMO_BANKS === 'true';
  * EXPO_PUBLIC_PLAID_ENV is sandbox (user_good / pass_good), real ones when it's production.
  * Phones can't open Plaid until its phone library is added (PLAID.md, step 4).
  */
+/**
+ * After a bank connects: credit cards the app recognized are already in the Wallet. If any
+ * weren't, go straight to "Add your cards" to pick them; otherwise close.
+ */
+function afterLink(added: Account[]) {
+  const unknown = added.filter((a) => a.type === 'credit' && !a.productId);
+  if (unknown.length) router.replace({ pathname: '/setup-cards', params: { institution: unknown[0].institutionId } });
+  else if (router.canGoBack()) router.back();
+  else router.replace('/');
+}
+
 export default function LinkAccount() {
   const t = useTheme();
   const toast = useToast();
@@ -46,8 +58,7 @@ export default function LinkAccount() {
         linkAccounts(added);
         void refreshBanks(); // loads the transactions the server just pulled
         toast(`${institution} connected · ${added.length} account${added.length === 1 ? '' : 's'} added`);
-        if (router.canGoBack()) router.back();
-        else router.replace('/');
+        afterLink(added);
       } catch (e) {
         toast(e instanceof Error ? e.message : 'The bank connection didn’t finish.', 'error');
         setBusy(null);
@@ -64,8 +75,7 @@ export default function LinkAccount() {
       const added = demoAccountsFor(id, 0);
       linkAccounts(added);
       toast(`${name} connected · ${added.length} account${added.length > 1 ? 's' : ''} added`);
-      if (router.canGoBack()) router.back();
-      else router.replace('/');
+      afterLink(added);
     }, 900);
   }
 

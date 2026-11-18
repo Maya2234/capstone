@@ -1,4 +1,3 @@
-import { useId } from 'react';
 import Svg, { ClipPath, Defs, G, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { palette, QUARTERS, quarterPath, wordPath, CAP } from '@/brand/glyphs';
@@ -6,7 +5,9 @@ import { useTheme } from '@/theme/theme';
 
 /** The quarter-tile mark. `mono` paints all four quarters one color. */
 export function Mark({ size = 32, mono }: { size?: number; mono?: string }) {
-  const id = useId().replace(/:/g, '');
+  // Fixed, not useId(): the same on the server and in the browser (useId differed and broke
+  // hydration). Every copy of the logo draws identical gradients, so sharing ids is harmless.
+  const id = 'cmxmark';
   return (
     <Svg width={size} height={size} viewBox="20 20 160 160" accessibilityLabel="CardMaxx">
       <Defs>
@@ -37,7 +38,9 @@ const GAP = 3.2;
 /** Mark + CARDMAXX lettering from the star logo. `height` is the mark size. */
 export function Wordmark({ height = 30, showMark = true, tone }: { height?: number; showMark?: boolean; tone?: string }) {
   const t = useTheme();
-  const id = useId().replace(/:/g, '');
+  // Fixed, not useId(): the same on the server and in the browser (useId differed and broke
+  // hydration). Every copy of the logo draws identical gradients, so sharing ids is harmless.
+  const id = 'cmxword';
   const cap = height * 0.62;
   const s = cap / CAP;
   const w = (CARD.width + GAP + MAXX.width) * s;
@@ -69,7 +72,9 @@ export function Wordmark({ height = 30, showMark = true, tone }: { height?: numb
 
 // The mark drawn inside another Svg (nested Svg elements are unreliable on web).
 function MarkInline({ size }: { size: number }) {
-  const id = useId().replace(/:/g, '');
+  // Fixed, not useId(): the same on the server and in the browser (useId differed and broke
+  // hydration). Every copy of the logo draws identical gradients, so sharing ids is harmless.
+  const id = 'cmxtile';
   const k = size / 160;
   return (
     <G transform={`scale(${k}) translate(-20 -20)`}>

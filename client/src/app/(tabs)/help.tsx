@@ -4,6 +4,7 @@ import { Linking, View } from 'react-native';
 
 import { CONTACT_TOPICS, FAQ, SUPPORT } from '@/content/help';
 import { useStore } from '@/data/store';
+import { fetchOrExplain } from '@/lib/errors';
 import { useTheme, useWide } from '@/theme/theme';
 import { space } from '@/theme/tokens';
 import { Row, SectionHeader } from '@/ui/bits';
@@ -65,7 +66,7 @@ function Contact() {
     if (Object.keys(e).length) return;
     setSending(true);
     try {
-      const res = await fetch('/api/contact', {
+      const res = await fetchOrExplain('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, topic, message }),

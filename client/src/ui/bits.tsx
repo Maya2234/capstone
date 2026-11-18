@@ -3,7 +3,8 @@ import { ChevronRight, type LucideIcon } from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import { Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { CATEGORIES, type CategoryId } from '@/data/categories';
+import { useSpendCategories } from '@/data/spendCategories';
+import type { SpendCategory } from '@/data/types';
 import { money } from '@/lib/format';
 import { useTheme } from '@/theme/theme';
 import { radius, space } from '@/theme/tokens';
@@ -47,9 +48,9 @@ export function InstitutionBadge({ name, color, size = 40 }: { name: string; col
   );
 }
 
-export function CategoryIcon({ category, size = 40 }: { category: CategoryId; size?: number }) {
+export function CategoryIcon({ category, size = 40 }: { category: SpendCategory; size?: number }) {
   const t = useTheme();
-  const c = CATEGORIES[category];
+  const c = useSpendCategories().info(category);
   const Icon = c.icon;
   return (
     <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: c.color + (t.scheme === 'dark' ? '33' : '26'), alignItems: 'center', justifyContent: 'center' }}>

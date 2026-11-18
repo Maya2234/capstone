@@ -42,6 +42,26 @@ const STOP = new Set(['the', 'card', 'from', 'by', 'credit', 'visa', 'mastercard
 const words = (s: string) =>
   s.toLowerCase().replace(/[®™℠]/g, '').replace(/[^a-z0-9]+/g, ' ').trim().split(' ').filter((w) => w && !STOP.has(w));
 
+const GENERIC = new Set(['bank', 'of', 'online', 'na', 'us', 'u', 's', 'financial', 'services']);
+
+/**
+ * Catalog cards issued by a bank, from the bank's name as Plaid gives it ("Chase",
+ * "Citibank Online", "Bank of America"), for suggesting which card an account is.
+ */
+export function productsForBank(institutionName: string | undefined): Product[] {
+  if (!institutionName) return [];
+  const have = new Set(words(institutionName).filter((w) => !GENERIC.has(w)));
+  const compact = (s: string) => s.toLowerCase().replace(/[^a-z]/g, '');
+  const bank = compact(institutionName);
+  return PRODUCTS.filter((p) => {
+    const issuer = words(p.issuer).filter((w) => !GENERIC.has(w));
+    // Every distinctive word of the issuer ("capital one" in "Capital One N.A."), or the issuer
+    // at the start of the bank's name with spacing ignored ("Citi" in "Citibank Online",
+    // "U.S. Bank" as "usbank").
+    return (issuer.length > 0 && issuer.every((w) => have.has(w))) || bank.startsWith(compact(p.issuer));
+  });
+}
+
 /**
  * The catalog card a linked credit account most likely is, from what the bank calls it
  * ("Sapphire Preferred", "CHASE SAPPHIRE PREFERRED", "Platinum Card®" at American Express).

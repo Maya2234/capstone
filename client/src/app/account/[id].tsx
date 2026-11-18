@@ -1,15 +1,16 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { CreditCard, Gift, Search, Unlink } from 'lucide-react-native';
+import { ChevronRight, CreditCard, Gift, Search, Unlink } from 'lucide-react-native';
 import { Fragment, useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
+import { product, shortName } from '@/data/catalog';
 import { institution } from '@/data/demo';
-import { useTransactions } from '@/data/derive';
+import { useAccountTitle, useTransactions } from '@/data/derive';
 import { useStore } from '@/data/store';
 import { confirm } from '@/lib/confirm';
 import { dayLabel, money } from '@/lib/format';
-import { useWide } from '@/theme/theme';
-import { space } from '@/theme/tokens';
+import { useTheme, useWide } from '@/theme/theme';
+import { radius, space } from '@/theme/tokens';
 import { Badge, CategoryIcon, Divider, EmptyState, InstitutionBadge, Money, Row } from '@/ui/bits';
 import { Button } from '@/ui/Button';
 import { ProgressBar } from '@/ui/charts';
@@ -27,10 +28,12 @@ export default function AccountDetail() {
   const unlink = useStore((s) => s.unlinkInstitution);
   const toast = useToast();
   const wide = useWide();
+  const t = useTheme();
   const [q, setQ] = useState('');
   const [busy, setBusy] = useState(false);
 
   const txns = useTransactions(account);
+  const title = useAccountTitle(account);
   const shown = useMemo(() => {
     const s = q.trim().toLowerCase();
     return s ? txns.filter((x) => x.merchant.toLowerCase().includes(s)) : txns;
@@ -45,6 +48,7 @@ export default function AccountDetail() {
   }
   const inst = institution(account.institutionId, account.institutionName);
   const isCredit = account.type === 'credit';
+  const card = account.productId ? product(account.productId) : undefined;
 
   async function disconnect() {
     const ok = await confirm(`Disconnect ${inst.name}?`, `This removes every ${inst.name} account and its cards from CardMaxx. You can link it again any time.`, 'Disconnect');
@@ -69,13 +73,13 @@ export default function AccountDetail() {
   }
 
   return (
-    <Screen back title={account.name} inShell={false} maxWidth={wide ? 820 : undefined}>
+    <Screen back title={title} inShell={false} maxWidth={wide ? 820 : undefined}>
       <Surface style={{ gap: space.lg }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
           <InstitutionBadge name={inst.name} color={inst.color} size={44} />
           <View style={{ flex: 1 }}>
             <Text variant="bodyStrong">{inst.name}</Text>
-            <Text variant="small" tone="muted">{TYPE_LABEL[account.type]} ••{account.mask}</Text>
+            <Text variant="small" tone="muted">{card ? shortName(card) : TYPE_LABEL[account.type]} ••{account.mask}</Text>
           </View>
         </View>
         <View>
@@ -86,12 +90,27 @@ export default function AccountDetail() {
           <View style={{ gap: 8 }}>
             <ProgressBar value={account.balanceCents / account.limitCents} />
             <Text variant="small" tone="muted">
-              {money(account.limitCents - account.balanceCents, { whole: true })} available of {money(account.limitCents, { whole: true })}
+              {money(account.limitCents - account.balanceCents)} available of {money(account.limitCents, { whole: true })}
             </Text>
           </View>
         ) : null}
-        {account.productId && (
-          <Button label="Card benefits" icon={Gift} variant="soft" onPress={() => router.push({ pathname: '/card/[id]', params: { id: account.productId! } })} />
+        {card && (
+          // Which card this is, and the way to its benefits.
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${card.name}: see benefits`}
+            onPress={() => router.push({ pathname: '/card/[id]', params: { id: card.id } })}
+            style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
+              { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.md, borderRadius: radius.lg, backgroundColor: t.primarySoft },
+              (pressed || hovered) && { opacity: 0.85 },
+            ]}>
+            <Gift size={22} color={t.primarySoftText} />
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text variant="bodyStrong" numberOfLines={1} style={{ color: t.primarySoftText }}>{card.name}</Text>
+              <Text variant="small" style={{ color: t.primarySoftText, opacity: 0.85 }}>See benefits and rewards</Text>
+            </View>
+            <ChevronRight size={18} color={t.primarySoftText} />
+          </Pressable>
         )}
         {isCredit && !account.productId && (
           <View style={{ gap: 6 }}>

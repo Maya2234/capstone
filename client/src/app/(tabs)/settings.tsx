@@ -1,12 +1,13 @@
 import * as ImagePicker from 'expo-image-picker';
-import { router } from 'expo-router';
-import { Camera, KeyRound, LogOut } from 'lucide-react-native';
-import { useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { Camera, KeyRound, LogOut, ShieldCheck } from 'lucide-react-native';
+import { useCallback, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
+import { useSpendCategories } from '@/data/spendCategories';
 import { useStore } from '@/data/store';
 import type { Prefs } from '@/data/types';
-import { sendPasswordReset, signOut } from '@/services/auth';
+import { sendPasswordReset, signOut, verifiedFactor } from '@/services/auth';
 import { useTheme, useWide } from '@/theme/theme';
 import { space } from '@/theme/tokens';
 import { Avatar, Divider, Row, SectionHeader } from '@/ui/bits';
@@ -100,6 +101,9 @@ function Preferences() {
   const prefs = useStore((s) => s.prefs);
   const setPref = useStore((s) => s.setPref);
   const budgetCount = useStore((s) => s.budgets.length);
+  const { list: categoryList, customs } = useSpendCategories();
+  const categoryCount = categoryList.length;
+  const customCount = customs.length;
   const toggle = (k: 'showNetWorth' | 'cardSuggestions', label: string) => (
     <Row title={label} right={<Switch value={prefs[k]} onChange={(v) => setPref(k, v)} label={label} />} />
   );
@@ -110,6 +114,13 @@ function Preferences() {
         {toggle('showNetWorth', 'Show net worth on Home')}
         <Divider inset={12} />
         {toggle('cardSuggestions', 'Suggest cards that earn more')}
+        <Divider inset={12} />
+        <Row
+          title="Spending categories"
+          subtitle={`${categoryCount} in use${customCount ? `, ${customCount} of your own` : ''}`}
+          onPress={() => router.push('/categories')}
+          chevron
+        />
         <Divider inset={12} />
         <Row
           title="Monthly budgets"
@@ -139,8 +150,15 @@ function Preferences() {
 function Account() {
   const t = useTheme();
   const toast = useToast();
-  const email = useStore((s) => s.profile.email);
+  // The address you sign in with, not the editable profile email: reset links only work for that one.
+  const email = useStore((s) => s.session?.email ?? '');
   const [sending, setSending] = useState(false);
+  const [twoFactor, setTwoFactor] = useState<boolean | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      verifiedFactor().then((f) => setTwoFactor(!!f), () => setTwoFactor(null));
+    }, []),
+  );
   async function reset() {
     setSending(true);
     try {
@@ -156,6 +174,14 @@ function Account() {
     <View style={{ gap: space.md }}>
       <SectionHeader title="Security" />
       <Surface padded={false} style={{ padding: space.sm }}>
+        <Row
+          onPress={() => router.push('/two-factor')}
+          left={<ShieldCheck size={20} color={twoFactor ? t.success : t.textMuted} />}
+          title="Two-factor login"
+          subtitle={twoFactor === null ? 'Ask for a code when signing in' : twoFactor ? 'On' : 'Off: ask for a code when signing in'}
+          chevron
+        />
+        <Divider inset={12} />
         <Row
           onPress={sending ? undefined : reset}
           left={<KeyRound size={20} color={t.textMuted} />}

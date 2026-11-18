@@ -1,5 +1,14 @@
 import type { CategoryId } from './categories';
 
+/**
+ * A category for tracking spending: one of the built-in ones, or one the user made
+ * ("custom_" + a random id). Card rewards only know the built-in ones (CategoryId).
+ */
+export type SpendCategory = CategoryId | `custom_${string}`;
+
+/** A spending category the user made in Settings → Spending categories. */
+export type CustomCategory = { id: `custom_${string}`; label: string; color: string; icon: string };
+
 export type AccountType = 'checking' | 'savings' | 'credit' | 'investment' | 'loan';
 
 export type Institution = { id: string; name: string; color: string };
@@ -22,7 +31,7 @@ export type Transaction = {
   accountId: string;
   date: string; // ISO
   merchant: string;
-  category: CategoryId;
+  category: SpendCategory;
   amountCents: number; // positive = money out, negative = money in
   pending?: boolean;
   transfer?: boolean; // card payments, transfers and income: not spending
@@ -51,7 +60,7 @@ export type Purchase = {
   status: 'succeeded' | 'refunded' | 'pending';
 };
 
-export type Budget = { category: CategoryId; limitCents: number };
+export type Budget = { category: SpendCategory; limitCents: number };
 
 export type Profile = {
   name: string;
@@ -67,4 +76,15 @@ export type Prefs = {
   appearance: 'system' | 'light' | 'dark';
   /** The user closed the "set your budgets" prompt on Home. Budgets stay reachable from Settings. */
   budgetPromptDismissed: boolean;
+  /**
+   * Categories the user picked for merchants, keyed by merchantKey() (see derive.ts). They
+   * replace the automatic one for every past and future purchase at that merchant.
+   */
+  merchantCategories: Partial<Record<string, SpendCategory>>;
+  /** Categories the user picked for single transactions, keyed by transaction id. Beat merchant choices. */
+  transactionCategories: Partial<Record<string, SpendCategory>>;
+  /** Spending categories the user made. */
+  customCategories: CustomCategory[];
+  /** Built-in categories the user turned off. Their purchases count as "Everything else". */
+  hiddenCategories: CategoryId[];
 };

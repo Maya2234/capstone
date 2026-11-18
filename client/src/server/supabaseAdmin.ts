@@ -19,7 +19,23 @@ export function admin(): SupabaseClient {
 export async function requireUser(request: Request): Promise<{ id: string } | Response> {
   const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
   if (!token) return Response.json({ error: 'Sign in first.' }, { status: 401 });
+  // getUser asks Supabase Auth to check the token, so the claims read below are trustworthy.
   const { data, error } = await admin().auth.getUser(token);
   if (error || !data.user) return Response.json({ error: 'Your session ended. Sign in again.' }, { status: 401 });
+  // Two-factor on: a password-only session (aal1) isn't enough. Same rule as the database.
+  const hasFactor = (data.user.factors ?? []).some((f) => f.status === 'verified');
+  if (hasFactor && claims(token)?.aal !== 'aal2') {
+    return Response.json({ error: 'Enter your two-factor code first.', code: 'CODE_NEEDED' }, { status: 401 });
+  }
   return { id: data.user.id };
+}
+
+/** The payload of a JWT that Supabase has already verified. */
+function claims(token: string): { aal?: string } | null {
+  try {
+    const part = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(part + '='.repeat((4 - (part.length % 4)) % 4)));
+  } catch {
+    return null;
+  }
 }

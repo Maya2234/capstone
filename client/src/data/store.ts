@@ -6,9 +6,8 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { db, type UserData } from '@/services/db';
 import { isPlaidAccount, unlinkPlaid } from '@/services/plaid';
 
-import type { CategoryId } from './categories';
 import { walletCardFromAccount } from './demo';
-import type { Account, Budget, Prefs, Profile, Purchase, Transaction, WalletCard } from './types';
+import type { Account, Budget, Prefs, Profile, Purchase, SpendCategory, Transaction, WalletCard } from './types';
 
 export type Session = { userId: string; email: string; method: 'google' | 'email' } | null;
 
@@ -27,6 +26,13 @@ type State = Data & {
   session: Session;
   /** False until Supabase has said whether someone is signed in. */
   authReady: boolean;
+  /** Signed in with a password, but two-factor is on and the 6-digit code hasn't been entered. */
+  codeNeeded: boolean;
+  /**
+   * Signing in is done but the first page isn't on screen yet (loading the user's data, then
+   * the page's code). The loading screen covers the app meanwhile; any page clears it.
+   */
+  enteringApp: boolean;
 };
 
 type Actions = {
@@ -35,6 +41,8 @@ type Actions = {
   /** Called by src/data/sync.ts after sign-out. Clears this device's copy. */
   setSignedOut: () => void;
   setAuthReady: () => void;
+  setCodeNeeded: (v: boolean) => void;
+  setEnteringApp: (v: boolean) => void;
   updateProfile: (p: Partial<Profile>) => void;
   setPref: <K extends keyof Prefs>(k: K, v: Prefs[K]) => void;
   linkAccounts: (accounts: Account[]) => void;
@@ -48,12 +56,14 @@ type Actions = {
   addCard: (c: Omit<WalletCard, 'id' | 'addedAt' | 'enabled'>) => void;
   removeCard: (id: string) => void;
   setCardEnabled: (id: string, enabled: boolean) => void;
-  setBudget: (category: CategoryId, limitCents: number) => void;
-  removeBudget: (category: CategoryId) => void;
+  setBudget: (category: SpendCategory, limitCents: number) => void;
+  removeBudget: (category: SpendCategory) => void;
+  /** Deletes a custom category, and every merchant choice, single-purchase choice and budget that used it. */
+  deleteCustomCategory: (id: SpendCategory) => void;
 };
 
 const emptyProfile: Profile = { name: '', username: '', email: '', phone: '' };
-export const DEFAULT_PREFS: Prefs = { showNetWorth: true, cardSuggestions: true, appearance: 'system', budgetPromptDismissed: false };
+export const DEFAULT_PREFS: Prefs = { showNetWorth: true, cardSuggestions: true, appearance: 'system', budgetPromptDismissed: false, merchantCategories: {}, transactionCategories: {}, customCategories: [], hiddenCategories: [] };
 const emptyData: Data = { profile: emptyProfile, prefs: DEFAULT_PREFS, accounts: [], cards: [], budgets: [], purchases: [], transactions: [] };
 
 /** A brand-new user: just a profile. Banks and cards come from linking them; budgets from the user setting them. */
@@ -87,15 +97,19 @@ export const useStore = create<State & Actions>()(
         ...emptyData,
         session: null,
         authReady: false,
+        codeNeeded: false,
+        enteringApp: false,
 
         setSignedIn: (session, data) => {
           // Drop the retired "hide amounts" setting so saved prefs stop carrying it.
           const { hideAmounts: _retired, ...prefs } = data.prefs as Partial<Prefs> & { hideAmounts?: boolean };
           void _retired;
-          set({ session, ...data, prefs: { ...DEFAULT_PREFS, ...prefs } });
+          set({ session, codeNeeded: false, ...data, prefs: { ...DEFAULT_PREFS, ...prefs } });
         },
-        setSignedOut: () => set({ session: null, ...emptyData, prefs: get().prefs }),
+        setSignedOut: () => set({ session: null, codeNeeded: false, enteringApp: false, ...emptyData, prefs: get().prefs }),
         setAuthReady: () => set({ authReady: true }),
+        setCodeNeeded: (codeNeeded) => set({ codeNeeded }),
+        setEnteringApp: (enteringApp) => set({ enteringApp }),
 
         updateProfile: (p) => {
           set((s) => ({ profile: { ...s.profile, ...p } }));
@@ -199,18 +213,28 @@ export const useStore = create<State & Actions>()(
           set((s) => ({ budgets: s.budgets.filter((b) => b.category !== category) }));
           remote(() => db.deleteBudget(category));
         },
+        deleteCustomCategory: (id) => {
+          const { prefs, budgets } = get();
+          const keep = (m: Partial<Record<string, SpendCategory>>) => Object.fromEntries(Object.entries(m).filter(([, c]) => c !== id));
+          get().setPref('customCategories', prefs.customCategories.filter((c) => c.id !== id));
+          get().setPref('merchantCategories', keep(prefs.merchantCategories));
+          get().setPref('transactionCategories', keep(prefs.transactionCategories));
+          if (budgets.some((b) => b.category === id)) get().removeBudget(id);
+        },
       };
     },
     {
       name: 'cardmaxx',
-      // Data lives in Supabase; this is a device cache, and the session comes from Supabase Auth.
-      // v3: adds bank transactions.
-      version: 3,
-      migrate: () => ({ ...emptyData }) as State & Actions,
-      partialize: ({ session, authReady, ...rest }) => {
-        void session;
-        void authReady;
-        return Object.fromEntries(Object.entries(rest).filter(([, v]) => typeof v !== 'function')) as Data;
+      // Only display preferences are kept on the device (so the theme doesn't flash on load).
+      // Balances, transactions and everything else live in memory and reload from Supabase on
+      // each visit, so nothing financial is left in the browser after the tab closes.
+      // v4: stopped caching account data; older caches are dropped.
+      version: 4,
+      migrate: () => ({ prefs: DEFAULT_PREFS }) as unknown as State & Actions,
+      partialize: ({ prefs }) => ({ prefs: { appearance: prefs.appearance } }) as unknown as Data,
+      merge: (saved, current) => {
+        const appearance = (saved as { prefs?: Partial<Prefs> } | undefined)?.prefs?.appearance;
+        return appearance ? { ...current, prefs: { ...current.prefs, appearance } } : current;
       },
       storage: createJSONStorage(() => AsyncStorage),
     },

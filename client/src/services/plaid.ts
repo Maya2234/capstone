@@ -2,13 +2,14 @@
 // The routes check who's signed in from the Supabase access token sent here.
 
 import type { Account } from '@/data/types';
+import { fetchOrExplain } from '@/lib/errors';
 import { supabase } from '@/lib/supabase';
 
 async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
   if (!token) throw new Error('Sign in again to link a bank.');
-  const res = await fetch(path, {
+  const res = await fetchOrExplain(path, {
     ...init,
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...init.headers },
   });

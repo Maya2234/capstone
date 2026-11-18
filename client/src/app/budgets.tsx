@@ -3,9 +3,11 @@ import { Plus, X } from 'lucide-react-native';
 import { useState } from 'react';
 import { View } from 'react-native';
 
-import { BUDGET_CATEGORIES, CATEGORIES, type CategoryId } from '@/data/categories';
+import { BUDGET_CATEGORIES } from '@/data/categories';
+import { useSpendCategories } from '@/data/spendCategories';
 import { useMonthSpending } from '@/data/derive';
 import { useStore } from '@/data/store';
+import type { SpendCategory } from '@/data/types';
 import { money } from '@/lib/format';
 import { useTheme } from '@/theme/theme';
 import { space } from '@/theme/tokens';
@@ -20,12 +22,15 @@ import { useToast } from '@/ui/Toast';
 export default function Budgets() {
   const t = useTheme();
   const toast = useToast();
-  const saved = useStore((s) => s.budgets);
+  const { info, isActive, customs } = useSpendCategories();
+  // Budgets for turned-off or deleted categories stay saved but aren't shown or edited here.
+  const saved = useStore((s) => s.budgets).filter((b) => isActive(b.category));
   const setBudget = useStore((s) => s.setBudget);
   const removeBudget = useStore((s) => s.removeBudget);
   const { byCategory } = useMonthSpending();
   const [draft, setDraft] = useState(() => saved.map((b) => ({ category: b.category, value: String(Math.round(b.limitCents / 100)) })));
-  const unused = BUDGET_CATEGORIES.filter((c) => !draft.some((d) => d.category === c));
+  const offerable: SpendCategory[] = [...BUDGET_CATEGORIES.filter((c) => c === 'general' || isActive(c)), ...customs.map((c) => c.id)];
+  const unused = offerable.filter((c) => !draft.some((d) => d.category === c));
   const invalid = draft.some((d) => !(Number(d.value) > 0));
 
   function save() {
@@ -35,7 +40,7 @@ export default function Budgets() {
     if (router.canGoBack()) router.back();
     else router.replace('/');
   }
-  const add = (c: CategoryId) => {
+  const add = (c: SpendCategory) => {
     const spent = byCategory.get(c) ?? 0;
     setDraft((d) => [...d, { category: c, value: String(Math.max(50, Math.ceil(spent / 100 / 50) * 50)) }]);
   };
@@ -48,12 +53,12 @@ export default function Budgets() {
           <View key={d.category} style={[{ flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.md }, i > 0 && { borderTopWidth: 1, borderTopColor: t.border }]}>
             <CategoryIcon category={d.category} />
             <View style={{ flex: 1, minWidth: 0 }}>
-              <Text variant="bodyStrong" numberOfLines={1}>{CATEGORIES[d.category].label}</Text>
+              <Text variant="bodyStrong" numberOfLines={1}>{info(d.category).label}</Text>
               <Text variant="small" tone="subtle" numberOfLines={1}>{money(byCategory.get(d.category) ?? 0, { whole: true })} spent</Text>
             </View>
             <View style={{ width: 112 }}>
               <Input
-                label={`${CATEGORIES[d.category].label} budget`}
+                label={`${info(d.category).label} budget`}
                 hideLabel
                 prefix="$"
                 value={d.value}
@@ -62,7 +67,7 @@ export default function Budgets() {
                 error={Number(d.value) > 0 ? undefined : 'Required'}
               />
             </View>
-            <IconButton icon={X} label={`Remove ${CATEGORIES[d.category].label} budget`} size={36} onPress={() => setDraft((all) => all.filter((x) => x.category !== d.category))} />
+            <IconButton icon={X} label={`Remove ${info(d.category).label} budget`} size={36} onPress={() => setDraft((all) => all.filter((x) => x.category !== d.category))} />
           </View>
         ))}
       </Surface>
@@ -74,7 +79,7 @@ export default function Budgets() {
           </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
             {unused.map((c) => (
-              <Chip key={c} label={CATEGORIES[c].label} on={false} onPress={() => add(c)} />
+              <Chip key={c} label={info(c).label} on={false} onPress={() => add(c)} />
             ))}
           </View>
         </View>

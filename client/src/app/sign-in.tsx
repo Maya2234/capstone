@@ -66,7 +66,8 @@ function BrandPanel() {
 function Form() {
   const t = useTheme();
   const toast = useToast();
-  const [mode, setMode] = useState<'in' | 'up'>('in');
+  const [mode, setMode] = useState<'in' | 'up' | 'reset'>('in');
+  const [sentTo, setSentTo] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -112,23 +113,63 @@ function Form() {
     }
   }
 
-  function switchMode(next: 'in' | 'up') {
+  function switchMode(next: 'in' | 'up' | 'reset') {
     setMode(next);
     setErrors({});
     setNoMatch(false);
+    setSentTo(null);
   }
 
-  async function forgot() {
+  async function sendReset() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setErrors({ email: 'Enter your email and we’ll send a reset link' });
+      setErrors({ email: 'Enter a valid email' });
       return;
     }
+    setErrors({});
+    setBusy('email');
     try {
       await sendPasswordReset(email.trim());
-      toast(`Reset link sent to ${email.trim()}`);
+      setSentTo(email.trim());
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Couldn’t send the link', 'error');
+    } finally {
+      setBusy(null);
     }
+  }
+
+  if (mode === 'reset') {
+    return (
+      <View style={{ gap: space.lg }}>
+        <View style={{ gap: 6 }}>
+          <Text variant="h1" accessibilityRole="header">Reset your password</Text>
+          <Text tone="muted">Enter the email you sign in with and we’ll send you a link to choose a new password.</Text>
+        </View>
+        <Input
+          label="Email"
+          value={email}
+          onChangeText={(v) => { setEmail(v); setSentTo(null); }}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoComplete="email"
+          autoFocus
+          error={errors.email}
+          onSubmitEditing={sendReset}
+        />
+        {sentTo && (
+          <View accessibilityRole="alert" style={[styles.alert, { backgroundColor: t.successSoft }]}>
+            {/* Same message whether or not the account exists, so this can't be used to test emails. */}
+            <Text variant="small" tone="success">If there’s an account for {sentTo}, a reset link is on its way. Check your inbox and spam folder.</Text>
+          </View>
+        )}
+        <Button label={sentTo ? 'Send again' : 'Send reset link'} size="lg" onPress={sendReset} loading={busy === 'email'} full />
+        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6 }}>
+          <Text variant="small" tone="muted">Remembered it?</Text>
+          <Pressable accessibilityRole="button" onPress={() => switchMode('in')} hitSlop={8}>
+            <Text variant="smallStrong" tone="primary">Back to sign in</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
   }
 
   return (
@@ -177,7 +218,7 @@ function Form() {
         onSubmitEditing={submit}
       />
       {mode === 'in' && (
-        <Pressable accessibilityRole="button" onPress={forgot} style={{ alignSelf: 'flex-end', marginTop: -6 }} hitSlop={8}>
+        <Pressable accessibilityRole="button" onPress={() => switchMode('reset')} style={{ alignSelf: 'flex-end', marginTop: -6 }} hitSlop={8}>
           <Text variant="smallStrong" tone="primary">Forgot password?</Text>
         </Pressable>
       )}
