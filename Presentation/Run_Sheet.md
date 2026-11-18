@@ -33,11 +33,11 @@
 
 ### Full-Group Timed Rehearsal #1
 * **Date:** November 16, 2026
-* **Timekeeper:** Alex Chen
+* **Timekeeper:** Luke
 * **Total Time:** 9 minutes, 45 seconds (585 seconds total)
 
 **Per-Section Breakdown:**
 * **Intro & Team (Slides 1–2):** 1 min 10 sec *(Target: 1m 15s)* — *Note: Smooth handoff.*
-* **Core Concept & Architecture (Slides 3–5):** 3 min 20 sec *(Target: 3m 15s)* — *Note: Luke spent slightly longer on D0 diagram; will need to shorten explanation.*
-* **Constraints & Progress (Slides 6–7):** 2 min 25 sec *(Target: 2m 35s)* — *Note: Maya finished ahead of time; good pacing.*
-* **Goals, Division & Demo (Slides 8–10):** 2 min 50 sec *(Target: 2m 55s)* — *Note: Demo fallback transition practiced successfully.*
+* **Core Concept & Architecture (Slides 3–5):** 3 min 20 sec *(Target: 3m 15s)*
+* **Constraints & Progress (Slides 6–7):** 2 min 25 sec *(Target: 2m 35s)* 
+* **Goals, Division & Demo (Slides 8–10):** 2 min 50 sec *(Target: 2m 55s)*
