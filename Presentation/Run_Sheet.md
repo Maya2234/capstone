@@ -5,8 +5,8 @@
 | Slide | Title | Speaker | Planned Start | Duration (s) | Hand-off Line / Transition Cue |
 | :---: | :--- | :---: | :---: | :---: | :--- |
 | 1 | CardMaxx | Maya | 00:00 | 40 | slide transition |
-| 2 | Team | Luke | 00:40 | 35 | "Thanks, Luke. To understand the core of our project, let's look at the abstract." |
-| 3 | Abstract | Maya | 01:15 | 60 | "With that foundation set, Luke will walk us through our user stories." |
+| 2 | Team | Luke | 00:40 | 35 | "CardMaxx is..." |
+| 3 | Abstract | Maya | 01:15 | 60 | "Some relevant user stories are..." |
 | 4 | User stories | Luke | 02:15 | 60 | Next we can explain the design diagrams |
 | 5 | How it works (D0) | Luke | 03:15 | 75 | "The most important constraints we wanted to consider..." |
 | 6 | Constraints | Maya | 04:30 | 70 | "This semester we have made a lot of progress on..." |
