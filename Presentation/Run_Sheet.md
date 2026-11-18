@@ -4,15 +4,15 @@
 
 | Slide | Title | Speaker | Planned Start | Duration (s) | Hand-off Line / Transition Cue |
 | :---: | :--- | :---: | :---: | :---: | :--- |
-| 1 | CardMaxx | Maya | 00:00 | 40 | "Now let's meet the team building CardMaxx. Luke?" |
+| 1 | CardMaxx | Maya | 00:00 | 40 | slide transition |
 | 2 | Team | Luke | 00:40 | 35 | "Thanks, Luke. To understand the core of our project, let's look at the abstract." |
 | 3 | Abstract | Maya | 01:15 | 60 | "With that foundation set, Luke will walk us through our user stories." |
-| 4 | User stories | Luke | 02:15 | 60 | "Now, how does this actually function under the hood? Luke explains our architecture." |
-| 5 | How it works (D0) | Luke | 03:15 | 75 | "Of course, building this safely involves strict constraints. Maya?" |
-| 6 | Constraints | Maya | 04:30 | 70 | "Despite these constraints, we've made solid progress. Here is where we stand." |
-| 7 | Progress | Maya | 05:40 | 85 | "Looking ahead to the end of term, Luke will share our finish line." |
-| 8 | By end of term | Luke | 07:05 | 60 | "To make all this happen, here is how our work is divided. Maya?" |
-| 9 | Division of work | Maya | 08:05 | 45 | "And now, for the highlight—let's see it live. Luke, take it away." |
+| 4 | User stories | Luke | 02:15 | 60 | Next we can explain the design diagrams |
+| 5 | How it works (D0) | Luke | 03:15 | 75 | "The most important constraints we wanted to consider..." |
+| 6 | Constraints | Maya | 04:30 | 70 | "This semester we have made a lot of progress on..." |
+| 7 | Progress | Maya | 05:40 | 85 | "Looking ahead to the end of term..." |
+| 8 | By end of term | Luke | 07:05 | 60 | "In terms of work division..." |
+| 9 | Division of work | Maya | 08:05 | 45 | "I've been focusing on... while luke has been focusing on..." |
 | 10 | Expo demo | Luke | 08:50 | 70 | *[End of presentation / Open for questions]* |
 
 *Total Planned Duration: 600 seconds (10 minutes)*
