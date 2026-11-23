@@ -1,6 +1,6 @@
 # Tasklist.md
 
-CardStack — Task List (Design D3). Team: Luke Brogee, Maya Tomarchio.
+CardMaxx — Task List (Design D3). Team: Luke Brogee, Maya Tomarchio.
 
 T-01. Develop checkout_button embed script and domain verification logic. Module: Checkout Button. Owner: Luke.
 

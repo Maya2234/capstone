@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { ChevronRight, Landmark, Plus, Sparkles, Target, X } from 'lucide-react-native';
+import { ChevronRight, Landmark, ShoppingBag, Plus, Sparkles, Target, X } from 'lucide-react-native';
 import { Fragment, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
@@ -45,6 +45,7 @@ export default function Home() {
           {greeting()}{name ? `, ${name}` : ''}
         </Text>
       </View>
+      <DemoBanner />
       {wide ? (
         <View style={{ flexDirection: 'row', gap: space.xl, alignItems: 'flex-start' }}>
           <View style={{ flex: 1.15, gap: space.xl }}>{left}</View>
@@ -154,6 +155,27 @@ function AccountRow({ a }: { a: Account }) {
         />
       </View>
     </View>
+  );
+}
+
+/** Way into the demo stores: shop somewhere pretend and check out with CardMaxx. */
+function DemoBanner() {
+  const t = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={() => router.push('/stores')}
+      style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
+        { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.lg, borderRadius: 20, backgroundColor: t.primarySoft },
+        (pressed || hovered) && { opacity: 0.85 },
+      ]}>
+      <ShoppingBag size={24} color={t.primarySoftText} />
+      <View style={{ flex: 1, gap: 2 }}>
+        <Text variant="bodyStrong" style={{ color: t.primarySoftText }}>Try CardMaxx checkout</Text>
+        <Text variant="small" style={{ color: t.primarySoftText, opacity: 0.85 }}>Shop at a demo store and see which card earns the most</Text>
+      </View>
+      <ChevronRight size={20} color={t.primarySoftText} />
+    </Pressable>
   );
 }
 

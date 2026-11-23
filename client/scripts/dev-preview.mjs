@@ -19,7 +19,9 @@ const OUTER = Number(process.argv[2] ?? 8082);
 const INNER = OUTER + 100;
 
 const clientDir = new URL('..', import.meta.url);
-const expo = spawn('npx', ['expo', 'start', '--web', '--port', String(INNER)], { cwd: clientDir, stdio: 'inherit', shell: true });
+// Metro can outgrow Node's default ~4 GB heap on this project and crash, so give it 8 GB.
+const env = { ...process.env, NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ''} --max-old-space-size=8192`.trim() };
+const expo = spawn('npx', ['expo', 'start', '--web', '--port', String(INNER)], { cwd: clientDir, stdio: 'inherit', shell: true, env });
 expo.on('exit', (code) => process.exit(code ?? 1));
 for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { expo.kill(); process.exit(0); });
 

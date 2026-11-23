@@ -1,4 +1,4 @@
-# CardStack — Test Plan
+# CardMaxx — Test Plan
 
 **Team:** Luke Brogee, Maya Tomarchio  
 **Faculty Advisor:** Dr. Aurisano  
@@ -28,9 +28,9 @@
 
 | Item | Type | Reason |
 | --- | --- | --- |
-| Stage two: CardStack card, virtual debit card, in-person and tap payments | Won't |Restricts scope to the core e-commerce checkout button plugin and recommendation system; physical card manufacturing and NFC tap infrastructure are reserved for future major company milestones. |
+| Stage two: CardMaxx card, virtual debit card, in-person and tap payments | Won't |Restricts scope to the core e-commerce checkout button plugin and recommendation system; physical card manufacturing and NFC tap infrastructure are reserved for future major company milestones. |
 | Our own payment processor or card network connection | Won't |Avoids massive regulatory overhead (PCI-DSS Level 1 direct acquirer requirements); instead, leverages established tokenized processors (Stripe). |
-| Storing, displaying, or accepting full card numbers | Won't |Enforces rigorous security compliance (NFR-03); raw Primary Account Numbers never touch CardStack servers or logs. |
+| Storing, displaying, or accepting full card numbers | Won't |Enforces rigorous security compliance (NFR-03); raw Primary Account Numbers never touch CardMaxx servers or logs. |
 | Refunds, chargebacks, and disputes | Won't |Defers dispute management and merchant ledger operations entirely to the underlying payment processor and merchant dashboard integrations. |
 | Non-USD currencies and non-US merchants | Won't |Focuses initial market fit strictly on domestic US e-commerce transactions and USD-denominated accounts. |
 | Recurring or subscription payments | Won't |Focuses exclusively on single-instance, dynamic e-commerce checkouts rather than billing recurrence engines. |
@@ -47,7 +47,7 @@ Conducted internally by the development team to ensure that every implemented co
 **Validation (users and advisor, against stakeholder needs):**
 Conducted externally through user acceptance testing (UAT) with beta users, pilot merchant partners, and faculty advisors (CS 5002). While verification proves the system is built right, validation ensures we built the right system. This focuses on user experience, end-to-end checkout friction, intuitive wallet management, and ensuring the recommendation engine's highest effective-value card selection (REQ-04) delivers genuine financial utility and satisfaction to the end user.
 
-CardStack has no hardware, sensor, or machine learning component, so trial variables and tolerances do not apply.
+CardMaxx has no hardware, sensor, or machine learning component, so trial variables and tolerances do not apply.
 
 | Layer | Approx. count | Coverage focus |
 | --- | --- | --- |
@@ -80,9 +80,9 @@ CardStack has no hardware, sensor, or machine learning component, so trial varia
 
 | ID | Description | Steps | Expected Result | Status |
 | --- | --- | --- | --- | --- |
-| TC-01.1 |REQ-01: Ecommerce page has correct registered ID and allowed domain | 1. | On ecommerce page load the CardStack checkout button will appear for the user to checkout with | Not Run |
-| TC-01.2 |REQ-01: Ecommerce page has incorrect registered ID | 1. | On ecommerce page load the CardStach checkout button will silently fail and not appear as an option to checkout. Send alert to ecommerce user of registeredID error | Not Run |
-| TC-01.3 |REQ-01: Ecommerce page has incorrect allowed domain | 1. | On ecommerce page load the CardStach checkout button will silently fail and not appear as an option to checkout. Send alert to ecommerce user of domain error | Not Run |
+| TC-01.1 |REQ-01: Ecommerce page has correct registered ID and allowed domain | 1. | On ecommerce page load the CardMaxx checkout button will appear for the user to checkout with | Not Run |
+| TC-01.2 |REQ-01: Ecommerce page has incorrect registered ID | 1. | On ecommerce page load the CardMaxx checkout button will silently fail and not appear as an option to checkout. Send alert to ecommerce user of registeredID error | Not Run |
+| TC-01.3 |REQ-01: Ecommerce page has incorrect allowed domain | 1. | On ecommerce page load the CardMaxx checkout button will silently fail and not appear as an option to checkout. Send alert to ecommerce user of domain error | Not Run |
 
 ### 4.2 REQ-02 — Google sign-in; re-prompt on invalid or expired token (Owner: Maya)
 
@@ -155,6 +155,117 @@ CardStack has no hardware, sensor, or machine learning component, so trial varia
 | TC-19.1 |NFR-04: Verify that the server rejects inbound connections attempting to negotiate obsolete TLS protocols (TLS 1.0 or TLS 1.1). | 1. |Use a security scanning tool (e.g., testssl.sh or OpenSSL client command) to attempt a handshake with the API using TLS 1.0 and TLS 1.1. | Not Run |
 | TC-19.2 |NFR-04: Confirm that the endpoint uses strong cipher suites and valid certificate chains. | 1. |Inspect the SSL/TLS configuration using an external scanner (e.g., SSL Labs test). | Not Run |
 | TC-19.3 |NFR-04: Confirm that Azure SQL Database and associated storage accounts enforce AES-256 encryption at rest. | 1. |Check Azure Portal / Azure CLI configurations for the SQL server and storage resources. | Not Run |
+
+### Planned for the next cycle (4.11–4.27)
+
+The test cases below complete the traceability matrix (Technical Specification Section 6, README Section 3): every requirement now has at least one defined test case. They cover the Should, Could, and constraint items scheduled after the Must set, so their status is Not Run until milestones M9 and M12 (Section 7). Owners are assigned at the M6 planning meeting.
+
+### 4.11 REQ-08 — Ask consent before charging the next-ranked card (Owner: Maya)
+
+| ID | Description | Steps | Expected Result | Status |
+| --- | --- | --- | --- | --- |
+| TC-08.1 | REQ-08: First card declined, a second card is linked | 1. Link two cards, the best-ranked being test card •••• 0002 (always declines). 2. Check out. | The checkout names the declined card and asks permission before using the next-ranked card; no second charge happens until the consumer agrees. | Not Run |
+| TC-08.2 | REQ-08: Consumer refuses the fallback card | 1. Repeat TC-08.1. 2. Choose Cancel at the prompt. | No second charge is made; the transaction ends FAILED and the merchant receives a declined result. | Not Run |
+| TC-08.3 | REQ-08: First card declined, no other card linked | 1. Link only test card •••• 0002. 2. Check out. | No fallback prompt is shown; the consumer sees a clear decline message and the transaction ends FAILED. | Not Run |
+
+### 4.12 REQ-09 — Signed merchant webhook with 5 retries (Owner: Luke)
+
+| ID | Description | Steps | Expected Result | Status |
+| --- | --- | --- | --- | --- |
+| TC-09.1 | REQ-09: Webhook delivered and signature verifies | 1. Complete a sandbox purchase. 2. Verify the HMAC-SHA256 header at the test merchant with the shared secret. | The merchant receives one payload {orderId, transactionId, state, amountCents, timestamp} and the signature is valid. | Not Run |
+| TC-09.2 | REQ-09: Merchant endpoint failing | 1. Make the test merchant return HTTP 500. 2. Complete a purchase. | Delivery is retried with exponential backoff up to 5 attempts; after the 5th failure the merchant is flagged. | Not Run |
+
+### 4.13 REQ-10 — UNKNOWN after a 10 s timeout, reconciled within 15 minutes (Owner: Luke)
+
+| ID | Description | Steps | Expected Result | Status |
+| --- | --- | --- | --- | --- |
+| TC-10.1 | REQ-10: Processor does not answer | 1. Check out with test card •••• 0010 (processor never answers). | After 10 s the transaction is UNKNOWN; within 15 minutes the reconciliation job resolves it to SUCCEEDED or FAILED. | Not Run |
+
+### 4.14 REQ-11 — Paginated transaction history (Owner: Luke)
+
+| ID | Description | Steps | Expected Result | Status |
+| --- | --- | --- | --- | --- |
+| TC-11.1 | REQ-11: History lists 20 items per page | 1. Seed 45 transactions for a test user. 2. Open the history in the web app, then the mobile app. | Page 1 shows 20 items with merchant, amount, date, card last four, and points earned; pages 2 and 3 show 20 and 5. | Not Run |
+
+### 4.15 REQ-12 — List, remove, and set a preferred card (Owner: Luke)
+
+| ID | Description | Steps | Expected Result | Status |
+| --- | --- | --- | --- | --- |
+| TC-12.1 | REQ-12: Remove a linked card | 1. Open the Wallet. 2. Remove a card. | The card disappears from the list and is never selected at checkout. | Not Run |
+| TC-12.2 | REQ-12: Mark a preferred card | 1. Mark one card preferred. 2. Check out in a category where two cards tie. | The preferred card wins the tie (REQ-04 tie-break order). | Not Run |
+
+### 4.16 REQ-13 — Receipt email within 1 minute (Owner: Luke)
+
+| ID | Description | Steps | Expected Result | Status |
+| --- | --- | --- | --- | --- |
+| TC-13.1 | REQ-13: Receipt after SUCCEEDED | 1. Complete a sandbox purchase with a test inbox. | A receipt with merchant, amount, card last four, and rewards arrives within 1 minute of SUCCEEDED. | Not Run |
+
+### 4.17 REQ-14 — Empty state with Add a card (Owner: Luke)
+
+| ID | Description | Steps | Expected Result | Status |
+| --- | --- | --- | --- | --- |
+| TC-14.1 | REQ-14: New user with no cards | 1. Sign in as a new user. 2. Open the Wallet. | An empty state with an Add a card action is shown, and the action opens Plaid Link. | Not Run |
+
+### 4.18 REQ-15 — Selection reason recorded (Owner: Maya)
+
+| ID | Description | Steps | Expected Result | Status |
+| --- | --- | --- | --- | --- |
+| TC-15.1 | REQ-15: Selection log entry | 1. Complete a purchase. 2. Inspect the selection log. | One entry records the chosen card, the reward rule applied, and the reason (for example highest effective value, or tie broken by preferred card). | Not Run |
+
+### 4.19 NFR-02 — Button lookup under 300 ms at p95 (Owner: Maya)
+
+| ID | Description | Steps | Expected Result | Status |
+| --- | --- | --- | --- | --- |
+| TC-17.1 | NFR-02: Lookup latency | 1. Run 1,000 GET /server/v1/button/{id} requests with k6. | The 95th-percentile response time is under 300 ms. | Not Run |
+
+### 4.20 NFR-05 — 30-minute session expiry and signed webhooks (Owner: Maya)
+
+| ID | Description | Steps | Expected Result | Status |
+| --- | --- | --- | --- | --- |
+| TC-20.1 | NFR-05: Idle session expires | 1. Sign in. 2. Leave the app idle for 31 minutes. 3. Act again. | The consumer is signed out and asked to sign in again. | Not Run |
+| TC-20.2 | NFR-05: Unsigned or tampered webhook | 1. Send a Plaid webhook with a missing or wrong signature. | The webhook is rejected and nothing is stored or changed. | Not Run |
+
+### 4.21 NFR-06 — Checkout in 3 clicks and under 30 s (Owner: Maya)
+
+| ID | Description | Steps | Expected Result | Status |
+| --- | --- | --- | --- | --- |
+| TC-21.1 | NFR-06: Usability test | 1. Five participants, each with one linked card, check out at the test merchant while timed. | At least 90% finish in 3 clicks or fewer and under 30 seconds. | Not Run |
+
+### 4.22 NFR-07 — First card linked in under 3 minutes (Owner: Maya)
+
+| ID | Description | Steps | Expected Result | Status |
+| --- | --- | --- | --- | --- |
+| TC-22.1 | NFR-07: Usability test | 1. Five first-time participants link a card through Plaid Link without help, timed. | At least 80% succeed in under 3 minutes. | Not Run |
+
+### 4.23 NFR-08 — 99% monthly availability from M9 (Owner: Maya)
+
+| ID | Description | Steps | Expected Result | Status |
+| --- | --- | --- | --- | --- |
+| TC-23.1 | NFR-08: Uptime monitor | 1. Point an external uptime monitor at the API health endpoint from M9. | Each month's measured availability is at least 99%. | Not Run |
+
+### 4.24 NFR-09 — No transaction stuck for more than 15 minutes (Owner: Maya)
+
+| ID | Description | Steps | Expected Result | Status |
+| --- | --- | --- | --- | --- |
+| TC-24.1 | NFR-09: Sweep for stuck transactions | 1. Create transactions in PROCESSING and UNKNOWN. 2. Wait 15 minutes. 3. Query the data store. | Every transaction is in a terminal state (SUCCEEDED, FAILED, or ABANDONED) and recorded. | Not Run |
+
+### 4.25 CON-01 — Costs covered by personal funds (inspection) (Owner: Maya)
+
+| ID | Description | Steps | Expected Result | Status |
+| --- | --- | --- | --- | --- |
+| TC-25.1 | CON-01: Cost review | 1. Review all service accounts and invoices (Supabase, Plaid, hosting, email) at each milestone. | Every cost is on a free tier or recorded in the README budget (Section 9). | Not Run |
+
+### 4.26 CON-02 — Faculty expertise sought (review record) (Owner: Maya)
+
+| ID | Description | Steps | Expected Result | Status |
+| --- | --- | --- | --- | --- |
+| TC-26.1 | CON-02: Advisor review record | 1. Check the meeting notes for each milestone review. | A dated advisor or faculty review is recorded for milestones M6 and M12. | Not Run |
+
+### 4.27 CON-04 — No consumer fees (inspection) (Owner: Maya)
+
+| ID | Description | Steps | Expected Result | Status |
+| --- | --- | --- | --- | --- |
+| TC-27.1 | CON-04: Fee inspection | 1. Walk through every consumer screen and the pricing configuration. | No screen, plan, or charge asks the consumer to pay a fee. | Not Run |
 
 ## 5. Test Environment
 

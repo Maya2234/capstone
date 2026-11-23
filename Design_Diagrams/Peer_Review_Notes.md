@@ -1,10 +1,10 @@
-# CardStack — Peer Design Review Notes (D2)
+# CardMaxx — Peer Design Review Notes (D2)
 
 ## Peer Feedback
 
 | ID | Criterion | Issue (raised by) | Action | Owner | Priority | Due |
 | --- | --- | --- | --- | --- | --- | --- |
-| PR-1 | Feasibility | Plaid connects bank and credit accounts for *reading* data, but it may not hand back a card token that can actually be charged. (Claire Hooper) | Document the token path end to end: Plaid Link → `/processor/token/create` with Stripe as the processor → `user_card.processor_token` → the charge in I4/I5. Add the same paragraph to the Design Rationale so a reader can see the card becomes chargeable without CardStack ever seeing a PAN. | Maya | High | 11/10 |
+| PR-1 | Feasibility | Plaid connects bank and credit accounts for *reading* data, but it may not hand back a card token that can actually be charged. (Claire Hooper) | Document the token path end to end: Plaid Link → `/processor/token/create` with Stripe as the processor → `user_card.processor_token` → the charge in I4/I5. Add the same paragraph to the Design Rationale so a reader can see the card becomes chargeable without CardMaxx ever seeing a PAN. | Maya | High | 11/10 |
 | PR-2 | Clarity | The design says a declined card is followed automatically by a different card, but never states what the user is asked or told when that happens. (Claire Hooper) | Make the fallback an explicit user choice: the popup names the card being tried, shows the declined result, and offers "try <next card>" before a second charge. Update EC-03 and the PROCESSING → CARD_SELECTED edge in Figure 2 to match. | Maya | Medium | End of semester |
 | PR-3 | Clarity | Parts of the document do not agree with each other — for example the technology stack and the design rationale describe different hosting and frontend choices. (Claire Hooper) | Re-read D2 top to bottom against D1 and synthesise: one React Native story, one Azure story, interface revisions applied everywhere they are referenced. | Luke | High | 10/31 |
 

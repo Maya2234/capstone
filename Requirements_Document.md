@@ -1,4 +1,4 @@
-# CardStack — Requirements Document
+# CardMaxx — Requirements Document
 
 **Team:** Luke Brogee, Maya Tomarchio  
 **Faculty Advisor:** Dr. Aurisano  
@@ -14,9 +14,9 @@
 
 ## 2. Purpose and Scope
 
-This document defines what CardStack must do and for whom. It is the single source for requirement IDs: the Technical Specification traces to it, and the Week 10 test plan verifies against it. It consolidates the user stories, D0 architecture, D1 data model and API contracts, D2 edge cases and traceability table, and the D3 plan; it adds no new design.
+This document defines what CardMaxx must do and for whom. It is the single source for requirement IDs: the Technical Specification traces to it, and the Week 10 test plan verifies against it. It consolidates the user stories, D0 architecture, D1 data model and API contracts, D2 edge cases and traceability table, and the D3 plan; it adds no new design.
 
-CardStack is a payment method that lets a consumer pay with one checkout button and automatically charges the linked credit card that earns the most rewards for the purchase category.
+CardMaxx is a payment method that lets a consumer pay with one checkout button and automatically charges the linked credit card that earns the most rewards for the purchase category.
 
 **In scope**
 
@@ -24,7 +24,7 @@ CardStack is a payment method that lets a consumer pay with one checkout button 
 
 **Out of scope**
 
-- Stage two (the single CardStack card or virtual debit card for in-person and tap payments) is out of scope for this release and has no requirements here. See the Won't list in Section 7.
+- Stage two (the single CardMaxx card or virtual debit card for in-person and tap payments) is out of scope for this release and has no requirements here. See the Won't list in Section 7.
 
 ## 3. Stakeholders and User Goals
 
@@ -43,18 +43,18 @@ Each domain term and role name is defined once here and used with this meaning i
 
 | Term | Definition |
 | --- | --- |
-| CardStack | The system described in this document, including its backend services and its mobile and web apps. |
-| Consumer | A person who pays with CardStack and manages linked cards in the apps. Also called the user. |
+| CardMaxx | The system described in this document, including its backend services and its mobile and web apps. |
+| Consumer | A person who pays with CardMaxx and manages linked cards in the apps. Also called the user. |
 | Merchant | A business that embeds the Checkout Button on its e-commerce site and receives the payment result. |
 | Store Developer | The merchant's developer who installs and configures the Checkout Button. |
 | Compliance Auditor | A party that checks card-data handling against card network rules; never uses the system directly. |
-| Checkout Button | The CardStack button embedded on a merchant's checkout page, identified by a button ID and restricted to an allowed domain. |
+| Checkout Button | The CardMaxx button embedded on a merchant's checkout page, identified by a button ID and restricted to an allowed domain. |
 | Checkout Interface | The login popup and checkout pages that open from the Checkout Button and show the cart, the selected card, and the result. |
-| Linked card | A credit card the consumer has connected to CardStack through Plaid and that CardStack may charge. |
+| Linked card | A credit card the consumer has connected to CardMaxx through Plaid and that CardMaxx may charge. |
 | Preferred card | The one linked card the consumer marks as preferred; used first to break ties in card selection. |
-| PAN | Primary Account Number: the full credit card number. CardStack never stores or transmits it. |
-| Processor token | A token issued for a linked card that lets the payment processor charge the card without CardStack seeing the PAN. |
-| Plaid / Plaid Link | The third-party service, and its sign-in widget, that connects a consumer's bank and credit accounts to CardStack. |
+| PAN | Primary Account Number: the full credit card number. CardMaxx never stores or transmits it. |
+| Processor token | A token issued for a linked card that lets the payment processor charge the card without CardMaxx seeing the PAN. |
+| Plaid / Plaid Link | The third-party service, and its sign-in widget, that connects a consumer's bank and credit accounts to CardMaxx. |
 | Payment processor | The external service that charges a card using a processor token (Stripe, sandbox mode, in this release). |
 | Purchase category | The merchant category of a transaction (for example, Clothing) used to look up reward rates. |
 | Reward rule | The reward rate and type (cash back, points, or miles) a card product earns in one purchase category. |
@@ -62,7 +62,7 @@ Each domain term and role name is defined once here and used with this meaning i
 | Transaction | One purchase attempt, identified by a transactionId (UUID), that moves through the transaction states. |
 | Transaction state | One of INITIATED, AUTHENTICATED, CARD_SELECTED, PROCESSING, UNKNOWN, SUCCEEDED, FAILED, or ABANDONED (D2, Figure 2). SUCCEEDED, FAILED, and ABANDONED are terminal states. |
 | Idempotency key | The transactionId sent with a charge so that a repeated request cannot charge twice. |
-| Merchant webhook | The signed message CardStack sends to the merchant's endpoint when a transaction reaches a terminal state. |
+| Merchant webhook | The signed message CardMaxx sends to the merchant's endpoint when a transaction reaches a terminal state. |
 | Reconciliation job | The background job that asks the processor for the final result of a transaction left in UNKNOWN. |
 | Session | A short-lived sign-in issued after Google sign-in, stored as a token hash. |
 | Sandbox | The test environments of Plaid and the payment processor, which use test accounts and move no real money. |
@@ -101,7 +101,7 @@ D2 traceability IDs map to this document as follows: R-1 → REQ-01, REQ-03; R-2
 | NFR-01 | Performance | The system shall route the consumer back to the merchant site within 5 seconds of clicking Purchase for at least 95% of transactions, measured in the staging sandbox under 20 concurrent checkouts. | Must | UC-01.1; UC-01.2 | Test (load test) |
 | NFR-02 | Performance | The system shall answer the Checkout Button lookup (GET /server/v1/button/{id}) within 300 ms at the 95th percentile. | Should | US-01 | Test |
 | NFR-03 | Security | The system shall never store, log, or pass through its servers a full card number (PAN); the data store shall hold only processor tokens and the last four digits. | Must | Stakeholder map (Compliance Auditor) | Inspection (schema and log review) and Test |
-| NFR-04 | Security | All traffic between clients, CardStack, and external services shall use HTTPS with TLS 1.2 or higher, and processor tokens shall be encrypted at rest with AES-256. | Must | Stakeholder map (Compliance Auditor); CON-03 | Inspection |
+| NFR-04 | Security | All traffic between clients, CardMaxx, and external services shall use HTTPS with TLS 1.2 or higher, and processor tokens shall be encrypted at rest with AES-256. | Must | Stakeholder map (Compliance Auditor); CON-03 | Inspection |
 | NFR-05 | Security | Sessions shall expire after 30 minutes of inactivity, and every inbound Plaid webhook and outbound merchant webhook shall carry a signature that is verified before it is processed. | Should | US-03; CON-03 | Test |
 | NFR-06 | Usability | A consumer with at least one linked card shall complete checkout from the button click in no more than 3 clicks and under 30 seconds, with a success rate of at least 90% across 5 usability-test participants. | Should | US-01; US-03 | Demonstration (usability test) |
 | NFR-07 | Usability | A first-time consumer shall link a first card through Plaid Link in under 3 minutes, with at least 80% of usability-test participants succeeding without help. | Could | US-02 | Demonstration (usability test) |
@@ -117,10 +117,10 @@ D2 traceability IDs map to this document as follows: R-1 → REQ-01, REQ-03; R-2
 - **Should:** REQ-08, REQ-09, REQ-10, REQ-11, REQ-12, NFR-02, NFR-05, NFR-06, NFR-08, NFR-09
 - **Could:** REQ-13, REQ-14, REQ-15, NFR-07
 - **Won't (this release):** the items below are written down so they cannot creep back in.
-  - The single CardStack card or virtual debit card, and in-person or tap payments (stage two).
-  - Building CardStack's own payment processor or card network connection.
-  - Storing, displaying, or accepting full card numbers inside CardStack.
-  - Refunds, chargebacks, and disputes inside CardStack (handled by the merchant and the processor).
+  - The single CardMaxx card or virtual debit card, and in-person or tap payments (stage two).
+  - Building CardMaxx's own payment processor or card network connection.
+  - Storing, displaying, or accepting full card numbers inside CardMaxx.
+  - Refunds, chargebacks, and disputes inside CardMaxx (handled by the merchant and the processor).
   - Currencies other than USD, and merchants outside the United States.
   - Recurring or subscription payments.
   - A merchant analytics dashboard.
@@ -143,7 +143,7 @@ Constraints come from the Week 3 constraints essay ([Constraints_Essay.md](Const
 
 | ID | Type | Statement | Owner | Resolve by |
 | --- | --- | --- | --- | --- |
-| A-01 | Assumption | A Plaid processor token for a linked credit card can be charged by the payment processor (Plaid → Stripe), so CardStack never handles a PAN. | Maya | 11/10/2026 |
+| A-01 | Assumption | A Plaid processor token for a linked credit card can be charged by the payment processor (Plaid → Stripe), so CardMaxx never handles a PAN. | Maya | 11/10/2026 |
 | A-02 | Assumption | Reward rules for common card products can be researched by the team and entered manually; no live reward-rate feed is required for this release. | Maya | 12/04/2026 |
 | A-03 | Assumption | A team-built test merchant site is enough to demonstrate merchant integration; no real merchant is required. | Luke | 11/20/2026 |
 | Q-01 | Open question | What point value (in cents) should each miles or points program use so it can be compared with cash back? | Maya | 01/22/2027 |

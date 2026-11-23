@@ -4,7 +4,7 @@
     "Reward rates change often. Every product has a sourceUrl to the issuer page; verify before relying on a number.",
     "rate is points (or cents of cash back) earned per dollar. pointValueCents is a conservative cash or travel redemption value, not a transfer-partner valuation.",
     "Effective value of a purchase = amountCents / 100 * rate * pointValueCents.",
-    "Categories prefixed with portal: only apply when booking through the issuer's travel site, and categories prefixed with merchant: only apply at that brand. CardStack checkout ignores both unless the merchant matches.",
+    "Categories prefixed with portal: only apply when booking through the issuer's travel site, and categories prefixed with merchant: only apply at that brand. CardMaxx checkout ignores both unless the merchant matches.",
     "capCents is the spend cap for the bonus rate in capPeriod; spend above it earns baseRate.",
     "confidence is how sure we are the rates are current: high, medium, or low."
   ],
@@ -407,7 +407,7 @@
         {"category": "merchant:walgreens", "rate": 3},
         {"category": "merchant:nike", "rate": 3}
       ],
-      "notes": "2% applies to Apple Pay purchases; CardStack charges count as card-not-present, which may earn only 1%.",
+      "notes": "2% applies to Apple Pay purchases; CardMaxx charges count as card-not-present, which may earn only 1%.",
       "sourceUrl": "https://www.apple.com/apple-card/", "confidence": "medium"
     },
     {

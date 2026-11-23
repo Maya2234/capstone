@@ -1,4 +1,4 @@
-### **CardStack**
+### **CardMaxx**
 ---
 >A payment method that will allow users to utilize one payment option to automatically select from pre-authorized cards and accounts to maximize benefits on a >transaction.\
 >**Stage one**: A payment wallet to be implemented by merchants.\

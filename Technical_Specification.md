@@ -1,4 +1,4 @@
-# CardStack — Technical Specification Document
+# CardMaxx — Technical Specification Document
 
 **Team:** Luke Brogee, Maya Tomarchio  
 **Faculty Advisor:** Dr. Aurisano  
@@ -11,6 +11,7 @@
 | --- | --- | --- | --- |
 | 0.1 | 10/28/2026 | Initial draft, traced to Requirements Document v0.1. Consolidates D0, D1, D2, and the D3 plan. | Maya Tomarchio |
 | 1.0 | 10/29/2026 | Revisions from advisor review (Section 7); retrace to Requirements Document v1.0. | Luke Brogee |
+| 1.1 | 11/23/2026 | Product renamed CardMaxx. Records what was built this semester and how it differs from the target design (table below). Traceability test IDs TC-08 to TC-15, TC-17, and TC-20 to TC-27 are now defined in the Test Plan. | Maya Tomarchio |
 
 
 **Design changes since the Week 7 (D1) review**
@@ -19,15 +20,30 @@
 | --- | --- | --- | --- |
 | Frontend framework | React Vite (D1) | React Native for both apps (D2) | One codebase for the mobile and web apps (D2 rationale 5). |
 | Hosting | Google Cloud and Firebase (D1) | Microsoft Azure (D2) | GitHub-integrated deployment and autoscaling (D2 rationale 8 and 10); confirm per Q-04. |
-| Payment processor | Unnamed processor (D1) | Stripe, through a Plaid processor token | Plaid hands Stripe a chargeable token, so no PAN reaches CardStack (peer review PR-1). |
+| Payment processor | Unnamed processor (D1) | Stripe, through a Plaid processor token | Plaid hands Stripe a chargeable token, so no PAN reaches CardMaxx (peer review PR-1). |
 | Money format | Float64 amount (D1) | Integer cents | Avoids rounding errors on money (D2 rationale 7). |
 | Card in charge request | Caller sends cardId (D1) | Server calls selection internally | Selection returns a ranked list, so fallback happens on the server (D2 interface revisions). |
 | Error responses | HTTP 500 for all errors (D1) | 400, 401, 409, 502 plus an error code | Lets clients react to each error type (D2 interface revisions). |
 
 
+**As built this semester (v1.1)**
+
+The design in Sections 2 to 4 is the target for the full release. Two implementations exist so far, and they differ from it as follows. Requirement IDs are unchanged.
+
+| Area | Target design (Sections 2 to 4) | Built so far | Why, and what's next |
+| --- | --- | --- | --- |
+| Product name | CardStack | CardMaxx | Renamed in November with the new brand (`branding/`). All documents use the new name; the D0 to D2 diagram files and the draft slides still show the old one. |
+| Backend | Go API on Azure App Service | Prototype branch: Go API with mock Plaid and Stripe adapters. Main app: Expo Router API routes (`client/src/app/api/`) on the same codebase as the app | One TypeScript codebase was faster to ship with real Plaid; the Go checkout service remains the reference for REQ-01, REQ-05, REQ-07 to REQ-10. |
+| Database | Supabase PostgreSQL | Supabase PostgreSQL with row-level security on every table (`client/supabase/`) | As designed. Bank access tokens are AES-256-GCM encrypted and readable only by the server (NFR-04). |
+| Sign-in (REQ-02) | Google sign-in | Supabase email and password, optional two-factor login (TOTP) enforced in the database | Google sign-in is still planned; REQ-02 is unchanged and TC-02 runs once it is added. |
+| Card linking (REQ-06) | Plaid Link and webhooks | Plaid Link with real Plaid production access (web); encrypted access tokens, read-only transactions product | As designed for linking; Plaid webhooks are not wired yet (TC-06.x pending). |
+| Checkout and charging (REQ-01, REQ-03 to REQ-05, REQ-07) | Merchant Checkout Button, Stripe charge by processor token | Prototype branch: full checkout with the mock processor. Main app: a simulated checkout in two demo stores that ranks the user's Wallet cards (REQ-03, REQ-04); no money moves | Stripe and merchant onboarding are next semester's integration work (M9). |
+| Hosting and secrets | Azure; Azure Key Vault | Local development; secrets in `.env`, never committed | Hosting choice (Q-04) to be confirmed when deploying (EAS Hosting or Azure). |
+| Spending and budgets | Not in the target design | Spending by category and month or week, budgets, custom categories, per-merchant category rules | Added from user feedback; supports US-02 and REQ-11. |
+
 ## 2. Architecture Summary
 
-CardStack uses the client-server and layered architecture chosen in D0 (decision D-04); see the D0 block diagram ([Design_Diagrams/D0BlockDiagram.png](Design_Diagrams/D0BlockDiagram.png)) and the D2 checkout flow with error paths (D2, Figure 1).
+CardMaxx uses the client-server and layered architecture chosen in D0 (decision D-04); see the D0 block diagram ([Design_Diagrams/D0BlockDiagram.png](Design_Diagrams/D0BlockDiagram.png)) and the D2 checkout flow with error paths (D2, Figure 1).
 
 Major components. The presentation layer holds the Checkout Button, the Checkout Interface (login popup and checkout pages), the Mobile app (iOS/Android), and the Web app. The service layer holds Authentication & User Account, the Transaction & Card Selection Service (Automatic Card Selection and Card Processing), Financial Institution Setup, Transaction history, the Merchant webhook sender, and Receipt forwarding with Notifications. The data layer is the Card/Payment Information Store. External systems are Google sign-in, Plaid, the payment processor (Stripe), and the merchant's site.
 
@@ -98,7 +114,7 @@ Component boundaries use the interface IDs from D0 and D2 (I1–I11). All APIs a
 }
 ```
 
-*Merchant webhook payload (I6), header X-CardStack-Signature: HMAC-SHA256*
+*Merchant webhook payload (I6), header X-CardMaxx-Signature: HMAC-SHA256*
 
 ```json
 {
@@ -147,8 +163,8 @@ Component boundaries use the interface IDs from D0 and D2 (I1–I11). All APIs a
 | Mobile and web clients | React Native (one codebase; web build via React Native Web) | REQ-11 and REQ-12 must work the same in both apps; one codebase suits a two-person team under CON-01. |
 | Backend API | Go | Lightweight concurrency for NFR-01 under concurrent checkouts; Plaid's Go library supports REQ-06. |
 | Database | Supabase (managed PostgreSQL) | Relational model with foreign keys for REQ-04 and REQ-05; encryption at rest for NFR-04; free tier for CON-01. |
-| Consumer sign-in | Google Sign-In (OAuth 2.0 ID tokens) | REQ-02 and NFR-05; no passwords stored by CardStack (CON-03). |
-| Bank and card linking | Plaid Link and Plaid webhooks | REQ-06; consumers' bank credentials and PANs never reach CardStack (NFR-03, CON-05). |
+| Consumer sign-in | Google Sign-In (OAuth 2.0 ID tokens) | REQ-02 and NFR-05; no passwords stored by CardMaxx (CON-03). |
+| Bank and card linking | Plaid Link and Plaid webhooks | REQ-06; consumers' bank credentials and PANs never reach CardMaxx (NFR-03, CON-05). |
 | Payment processing | Stripe, sandbox mode, charged with a Plaid processor token | REQ-05 idempotent charges; card data stays in Stripe's PCI scope (NFR-03, CON-05); per-transaction fees only (CON-01). |
 | Hosting | Microsoft Azure App Service (API) and Azure Static Web Apps (web app) | Autoscaling and monitoring for NFR-08; deploys from GitHub; low starting cost (CON-01). |
 | Secrets | Azure Key Vault (secret manager) and environment variables | Keeps Plaid, Stripe, and signing keys out of the repository (NFR-04, CON-03). |
@@ -164,7 +180,7 @@ Component boundaries use the interface IDs from D0 and D2 (I1–I11). All APIs a
 | CON-02 | Professional: faculty expertise in final stages | Forces a faculty security and design review before M12 (04/09/2027) and an advisor review of these documents. |
 | CON-03 | Security: planned, documented, tested, overseen | Forces token-only storage, signed webhooks, TLS, a secret manager, and security tests in the Week 10 plan; rules out storing keys in the repository. |
 | CON-04 | Social: no consumer fees | Rules out charging consumers or adding surcharges; processor fees must be absorbed or covered by merchants in a later business model. |
-| CON-05 | Compliance: no plain-text PANs | Rules out accepting card numbers in CardStack forms or APIs; forces card entry through Plaid and charging through processor tokens. |
+| CON-05 | Compliance: no plain-text PANs | Rules out accepting card numbers in CardMaxx forms or APIs; forces card entry through Plaid and charging through processor tokens. |
 
 
 ## 6. Traceability Matrix
@@ -179,7 +195,7 @@ One row per REQ, NFR, and CON ID in Requirements Document v0.1. Test case IDs ar
 | REQ-04 | Pick highest effective-value card with tie-break order | Transaction & Card Selection Service (D0); Automatic Card Selection, EC-01, EC-02 (D2) | Designed | TC-04 |
 | REQ-05 | Charge by processor token with idempotency key | Card Processing (D1); I5, EC-03 (D2) | Designed | TC-05 |
 | REQ-06 | Link cards via Plaid; verify webhook signature | Financial Institution Setup, /connect-bank-account (D1); I9, EC-05 (D2) | Designed | TC-06 |
-| REQ-07 | Return payment result to merchant and route back | CardStack Checkout Interface, I6 (D0); D-05 (D0) | Designed | TC-07 |
+| REQ-07 | Return payment result to merchant and route back | CardMaxx Checkout Interface, I6 (D0); D-05 (D0) | Designed | TC-07 |
 | REQ-08 | Ask consent before charging next-ranked card | Card Processing ranked fallback (D2); peer review PR-2 | In progress | TC-08 |
 | REQ-09 | Signed merchant webhook with 5 retries | Merchant webhook, webhook_delivery, EC-06 (D2) | Designed | TC-09 |
 | REQ-10 | UNKNOWN after 10 s timeout; reconcile within 15 min | Transaction Lifecycle (D2, Figure 2); EC-04 (D2) | Designed | TC-10 |

@@ -1,6 +1,6 @@
 # Advisor Feedback: Design Presentation
 
-**Project:** CardStack
+**Project:** CardMaxx
 **Team:** Luke Brogee, Maya Tomarchio
 **Advisor:** Dr. Aurisano
 **Deck reviewed:** [CardStack_Design_Presentation_Draft.pptx](CardStack_Design_Presentation_Draft.pptx) ([PDF](CardStack_Design_Presentation_Draft.pdf))

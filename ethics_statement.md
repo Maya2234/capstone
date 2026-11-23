@@ -1,4 +1,4 @@
-# CardStack — Ethics Statement
+# CardMaxx — Ethics Statement
 
 **Team:** Luke Brogee, Maya Tomarchio  
 **Faculty Advisor:** Dr. Aurisano  
@@ -25,11 +25,11 @@ Each section is checked by the member who owns the relevant components (Tasklist
 
 ## 2. Privacy Summary
 
-CardStack is a payment method, so it handles some of the most sensitive data a consumer has. Our rule is to collect only what is needed to pick the best card and complete a charge. Full card numbers (PANs) never reach CardStack: cards are linked through Plaid, and charges use a processor token instead of the card number (NFR-03, CON-05). The table covers every data item that crosses an arrow on the D0 to D2 diagrams, using the table names from Technical Specification §3.
+CardMaxx is a payment method, so it handles some of the most sensitive data a consumer has. Our rule is to collect only what is needed to pick the best card and complete a charge. Full card numbers (PANs) never reach CardMaxx: cards are linked through Plaid, and charges use a processor token instead of the card number (NFR-03, CON-05). The table covers every data item that crosses an arrow on the D0 to D2 diagrams, using the table names from Technical Specification §3.
 
 | Data item | Source | Purpose | Consent | Storage | Access | Retention |
 | --- | --- | --- | --- | --- | --- | --- |
-| Email, Google account ID (`sub`), display name | Google Sign-In (I2, I7) | Identify the account; send receipts | Google's consent screen at first sign-in names the data shared with CardStack | `user` table | API service only | Until the user deletes their account |
+| Email, Google account ID (`sub`), display name | Google Sign-In (I2, I7) | Identify the account; send receipts | Google's consent screen at first sign-in names the data shared with CardMaxx | `user` table | API service only | Until the user deletes their account |
 | Session token | Issued by the API | Keep the user signed in | Part of signing in | Only a SHA-256 hash is stored (`session.token_hash`) | API service only | Expires after 30 minutes of inactivity (NFR-05); deleted on logout or expiry |
 | Plaid item ID and account IDs | Plaid Link (I9) | Link institutions and accounts | Plaid Link's consent screen; the user picks which accounts to share | `institution_link`, `user_card`, `linked_account` | API service only | Until the card or institution is removed, or the account is deleted |
 | Processor token | Plaid, for Stripe | Charge a card without seeing the PAN (REQ-05) | Given when the card is linked | Encrypted with AES-256-GCM (`user_card.processor_token`); the key is held outside the database in the secret manager | API service only; never returned by any endpoint (verified by TC-18) | Until the card is removed |
@@ -37,13 +37,13 @@ CardStack is a payment method, so it handles some of the most sensitive data a c
 | Chosen bonus categories and activated rotating categories | Entered by the user in the app | Apply the right reward rate | The user enters them | `user_card.choices`, `user_card.rotating_active` | API service; the owning user | Same as processor token |
 | Bank account name, type, last 4, balance | Plaid | Financial overview in the app | Plaid Link consent; user chooses the accounts | `linked_account` | API service; the owning user | Until the institution is removed |
 | Spending history from linked accounts (merchant, category, amount, date) | Plaid transactions | Spending by category, missed-rewards insight | Plaid Link consent, plus an in-app notice before the first link | `external_transaction` | API service; the owning user | kept until account deletion |
-| CardStack transaction (order ID, amount, category, card used, state, rewards earned) | Merchant checkout session and consumer checkout | Process the payment; transaction history (REQ-11) | The consumer sees the amount, merchant, and card and clicks Purchase (REQ-03) | `transaction`, `charge_attempt`, `selection_log` | API service; the owning user; the merchant sees only its own orders | until account deletion |
+| CardMaxx transaction (order ID, amount, category, card used, state, rewards earned) | Merchant checkout session and consumer checkout | Process the payment; transaction history (REQ-11) | The consumer sees the amount, merchant, and card and clicks Purchase (REQ-03) | `transaction`, `charge_attempt`, `selection_log` | API service; the owning user; the merchant sees only its own orders | until account deletion |
 | Merchant webhook payload (order ID, transaction ID, state, amount) | API to merchant (I6) | Confirm the order | Covered by the merchant agreement | `webhook_delivery` | Merchant, verified by HMAC signature | 90 days |
 | Receipt email | `user.email` | Send the receipt (REQ-13) | planned: receipt opt-in | `notification` | API service | until account deletion |
 | Merchant name, webhook URL, API key, button domain | Merchant onboarding | Run the Checkout Button and webhooks | Merchant agreement | `merchant` (API key stored hashed), `checkout_button` | API service | Until the merchant leaves |
 | Server logs | API | Debugging and security monitoring | Privacy notice | Server output (Azure App Service logs in production) | Team | 30 days|
 
-**How consent is obtained.** Users consent three times: on Google's sign-in screen, on Plaid Link's account-sharing screen, and on the CardStack confirm screen before every purchase. Consent is never implied by use.
+**How consent is obtained.** Users consent three times: on Google's sign-in screen, on Plaid Link's account-sharing screen, and on the CardMaxx confirm screen before every purchase. Consent is never implied by use.
 
 **When the project ends.** If project is decomissioned, all user data will be deleted.
 
@@ -55,7 +55,7 @@ The Week 3 constraints essay committed us to security that is "planned, document
 
 | Gap | How we addressed it |
 | --- | --- |
-| Default credentials | CardStack has no admin accounts and stores no passwords; consumers sign in with Google. The local development merchant keys (`msk_demo_threadline`, `whsec_demo_threadline`, `plaid-sandbox-secret`) only work when `CARDSTACK_DEV=1`. Outside development mode, the server refuses to start without a real encryption key (`CARDSTACK_TOKEN_KEY`). |
+| Default credentials | CardMaxx has no admin accounts and stores no passwords; consumers sign in with Google. The local development merchant keys (`msk_demo_threadline`, `whsec_demo_threadline`, `plaid-sandbox-secret`) only work when `CARDSTACK_DEV=1`. Outside development mode, the server refuses to start without a real encryption key (`CARDSTACK_TOKEN_KEY`). |
 | Unauthenticated endpoints | Every consumer endpoint requires a session token. Merchant endpoints require a merchant API key, stored hashed. The Plaid webhook is rejected unless its HMAC signature verifies (TC-06). `GET /button/{id}` only answers for the button's registered domain (REQ-01). `GET /checkout/{id}` is public by design so the checkout page can load, but it uses an unguessable UUID and returns no personal data. |
 | Secrets in source control | All keys come from environment variables, held in Azure Key Vault in production (Technical Specification §4). The local database and the generated development key live in `app/server/data/`, which is git-ignored. |
 
@@ -86,7 +86,7 @@ The Week 3 constraints essay committed us to security that is "planned, document
 
 ## 4. Licensing Summary
 
-**Project license:** CardStack is released under the MIT License (SPDX: MIT). It is compatible with every row below because all dependencies are permissive (MIT, BSD, Apache-2.0) and the one copyleft build tool (lightningcss, MPL-2.0) is not modified or shipped.
+**Project license:** CardMaxx is released under the MIT License (SPDX: MIT). It is compatible with every row below because all dependencies are permissive (MIT, BSD, Apache-2.0) and the one copyleft build tool (lightningcss, MPL-2.0) is not modified or shipped.
 
 | Name | Version | License (SPDX) | Type | Obligation |
 | --- | --- | --- | --- | --- |
@@ -164,7 +164,7 @@ The Week 3 constraints essay committed us to security that is "planned, document
 | --- | --- | --- |
 | Ionicons (tab bar icons) | Ionic | MIT |
 | App icon, splash, favicon | Expo template | MIT |
-| CardStack logo mark (three stacked cards) | Maya | Team-owned |
+| CardMaxx logo mark (three stacked cards) | Maya | Team-owned |
 
 ## 6. AI-Use Disclosure
 
@@ -179,8 +179,8 @@ The Week 3 constraints essay committed us to security that is "planned, document
 
 **Confirmation**
 
-I confirm that the architecture, data model, priorities, and design rationale of CardStack were the team's own. — Maya Tomarchio, date 11/8/2026
+I confirm that the architecture, data model, priorities, and design rationale of CardMaxx were the team's own. — Maya Tomarchio, date 11/8/2026
 
-I confirm that the architecture, data model, priorities, and design rationale of CardStack were the team's own. — Luke Brogee, date 11/8/2026
+I confirm that the architecture, data model, priorities, and design rationale of CardMaxx were the team's own. — Luke Brogee, date 11/8/2026
 
 ---

@@ -101,6 +101,9 @@ function Navigator() {
           <Stack.Screen name="setup-cards" options={sheet} />
           <Stack.Screen name="categories" options={sheet} />
           <Stack.Screen name="category-edit" options={sheet} />
+          <Stack.Screen name="stores" />
+          <Stack.Screen name="demo/[store]" />
+          <Stack.Screen name="demo/checkout" />
           <Stack.Screen name="new-password" />
         </Stack.Protected>
         <Stack.Protected guard={!signedIn && codeNeeded}>

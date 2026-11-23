@@ -3,3 +3,5 @@ app/consumer/node_modules/
 app/consumer/.expo/
 app/consumer/expo-env.d.ts
 app/server/data/
+# Team and self assessments hold peer ratings: PDF upload only, never committed
+essays/
