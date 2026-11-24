@@ -247,7 +247,7 @@ Full biographies and contact details: [Professional-Biographies.md](Professional
 
 | Member | Total hours | Design notebook |
 | --- | --- | --- |
-| Luke Brogee | **To do** | [notebooks/brogee_notebook.md](notebooks/brogee_notebook.md) |
+| Luke Brogee | 46 | [notebooks/brogee_notebook.md](notebooks/brogee_notebook.md) |
 | Maya Tomarchio | 47 | [notebooks/tomarchio_notebook.md](notebooks/tomarchio_notebook.md) |
 
 Supporting evidence: the planned hours in the [effort matrix](planning/D3_Effort_Matrix.xlsx), and the commit history (both members, September to November 2026): https://github.com/Maya2234/capstone/commits/main
